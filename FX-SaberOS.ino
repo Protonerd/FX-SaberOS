@@ -1158,7 +1158,6 @@ void loop() {
 #ifdef DEEP_SLEEP
   else if (SaberState == S_SLEEP) {
     if (PrevSaberState == S_CONFIG) { // just entered Sleep mode
-
       byte old_ADCSRA = ADCSRA;
       // disable ADC to save power
       // disable ADC
@@ -1167,11 +1166,12 @@ void loop() {
 
       // .. and the code will continue from here
 
-      ADCSRA = old_ADCSRA;   // re-enable ADC conversion
+
       SleepModeExit();
       SaberState = S_STANDBY;
       PrevSaberState = S_SLEEP;
       // play boot sound
+      ADCSRA = old_ADCSRA;   // re-enable ADC conversion
       SinglePlay_Sound(11);
       delay(20);
     }
