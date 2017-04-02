@@ -39,21 +39,18 @@
 #endif
 /************************************/
 
-/*
- * BLADE TYPE
- *
- * RGB LED OR PIXELBLADE users:
- * Comment the following line will
- * disable and remove all LEDSTRINGS
- * blocks from compile
- *************************************/
+// ==============================================================================
+// ===                          BLADE TYPE SETTINGS                           ===
+// ==============================================================================
+/*****************************************
+ * Define only the blade type to be used *
+ *****************************************/
 //#define LEDSTRINGS
 #define STAR_LED
 //#define PIXELBLADE
 
 /************************************/
-/*
- * SABER TYPE
+/* SABER TYPE
  * currently in v1.3 only the CROSSGUARDSABER
  * will have any effect on the code
  * due to the fire blade effect
@@ -62,19 +59,28 @@
 //#define SABERSTAFF  // i.e. Darth Maul saber with dual blades
 //#define CROSSGUARDSABER  // i.e. Kylo Ren saber
 
-/*
- * DEFAULT CONFIG PARAMETERS
+/* DEFAULT CONFIG PARAMETERS
  * Will be overriden by EEPROM settings
- * once the first save will be done
+ * once the first initialization is completed
  *************************************/
-#define VOL          20    //0-30
-#define SOUNDFONT       3
-#define SWING         1000 //default 1000
-#define CLASH_THRESHOLD 10 //default 10
-/************************************/
+#define VOL               20    //0-30
+#define SOUNDFONT         3
+#define SWING             1000 //default 1000
+#define CLASH_THRESHOLD   10 //default 10
 
-/*
- * DO NOT MODIFY
+/* MAX_BRIGHTNESS
+ *
+ * Maximum output of STAR_LED and PIXELBLADE
+ * Default = 100 (39,2%) Max=255 Min=0(Off)
+ *
+ * WARNING ! A too high value may burn
+ * your leds. Please make your maths !
+ * BE VERY CAREFULL WITH THIS ONE OR 
+ * YOU'LL BURN YOUR BLADE'S LED 
+ ************************************/
+#define MAX_BRIGHTNESS        200
+
+/* DO NOT MODIFY
  * Unless you know what you're doing
  *************************************/
 #if defined LEDSTRINGS
@@ -86,12 +92,14 @@
 #if defined PIXELBLADE
 #define CONFIG_VERSION     "L03"
 #endif
-#define MEMORYBASE       32
-
+#define MEMORYBASE          32
 /************************************/
 
+// ==============================================================================
+// ===                         BUTTON CONFIGURATION                           ===
+// ==============================================================================
 
-/* Set for single button or two button configuration */
+/* Set for single button or comment two button configuration */
 //#define SINGLEBUTTON
 
 // ==============================================================================
@@ -131,34 +139,20 @@ static const uint8_t rgbFactor = 100;
  * Default: 48
  */
 //#define COLORS		 		14
-#endif
+#endif  // BLADE TYPE
 
-/************************************/ // BLADE TYPE
-
-
-
-
-
-/* MAX_BRIGHTNESS
- *
- * Maximum output voltage to apply to LEDS
- * Default = 100 (39,2%) Max=255 Min=0(Off)
- *
- * WARNING ! A too high value may burn
- * your leds. Please make your maths !
- * BE VERY CAREFULL WITH THIS ONE OR 
- * YOU'LL BURN YOUR BLADE'S LED 
- ************************************/
-#define MAX_BRIGHTNESS		200
+// ==============================================================================
+// ===                           EFFECT SETTINGS                              ===
+// ==============================================================================
 
 // How long do the light effect last for the different FX's
-#define CLASH_FX_DURATION 200
-#define BLASTER_FX_DURATION 150
-#define SWING_FX_DURATION 400
+#define CLASH_FX_DURATION     200
+#define BLASTER_FX_DURATION   150
+#define SWING_FX_DURATION     400
 
 
-#define BLASTER_FLASH_TIME  3
-#define CLASH_FLASH_TIME  	1
+#define BLASTER_FLASH_TIME    3
+#define CLASH_FLASH_TIME  	  1
 
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
@@ -166,10 +160,10 @@ static const uint8_t rgbFactor = 100;
  *  HUM_RELAUNCH will tell the state machine to relaunch
  *  hum sound after this time period elapses
  */
-#define SWING_SUPPRESS     500
-#define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
-#define BLASTERBLOCK_SUPRESS     100
-#define HUM_RELAUNCH     5000
+#define SWING_SUPPRESS          500
+#define CLASH_SUPRESS           400  // do not modify below 400, otherwise interlocking clash sounds can occur
+#define BLASTERBLOCK_SUPRESS    100
+#define HUM_RELAUNCH            5000
 
 /* BLASTER DEFLECT TYPE
  * Define how a blaser bolt deflect is
@@ -281,8 +275,6 @@ static const uint8_t rgbFactor = 100;
   #define LOCKUP_BUTTON   2
 #endif
 
-#define BUTTONLEDPIN    16 //A2 This LED indicated DIYino functions
-
 /*
  * ACCENT_LED
  * Enable/disable management of
@@ -371,8 +363,4 @@ static const uint8_t rgbFactor = 100;
 //#define LS_CLASH_HEAVY_DEBUG
 #endif
 
-
-
-
 #endif /* CONFIG_H_ */
-

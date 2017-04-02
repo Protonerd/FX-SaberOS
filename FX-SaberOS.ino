@@ -510,9 +510,9 @@ void setup() {
   }
 
   while (digitalRead(MAIN_BUTTON) == LOW ) {
-    digitalWrite(BUTTONLEDPIN, HIGH);
+    digitalWrite(ACCENT_LED, HIGH);
     delay(100);
-    digitalWrite(BUTTONLEDPIN, LOW);
+    digitalWrite(ACCENT_LED, LOW);
     delay(100);
   }
 
