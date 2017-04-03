@@ -21,8 +21,8 @@
 #ifdef OLD_DPFPLAYER_LIB
 #include <SoftwareSerial.h> // interestingly the DFPlayer lib refuses
 #include "DFPlayer_Mini_Mp3.h"
-//SoftwareSerial mp3player(DFPLAYER_TX, DFPLAYER_RX); // TX, RX
-SoftwareSerial mp3player(7, 8); // TX, RX
+SoftwareSerial mp3player(DFPLAYER_TX, DFPLAYER_RX); // TX, RX
+//SoftwareSerial mp3player(7, 8); // TX, RX
 #else
 #include <DFPlayer.h>
 DFPlayer dfplayer;
@@ -53,6 +53,8 @@ DFPlayer dfplayer;
   #include <avr/sleep.h>
   #include <avr/power.h>
 #endif // DEEP_SLEEP
+
+unsigned long StandbyTime = 0;
 
 SoundFont soundFont;
 unsigned long sndSuppress = millis();
@@ -547,7 +549,6 @@ void setup() {
 // ===               	   			LOOP ROUTINE  	 	                			===
 // ====================================================================================
 void loop() {
-
   // if MPU6050 DMP programming failed, don't try to do anything : EPIC FAIL !
   if (!dmpReady) {
     return;
@@ -1050,7 +1051,6 @@ void loop() {
 
     if (ActionModeSubStates == AS_RETRACTION) { // we just leaved Action Mode
       //detachInterrupt(0);
-
       SinglePlay_Sound(soundFont.getPowerOff());
       ActionModeSubStates = AS_HUM;
       changeMenu = false;
@@ -1079,7 +1079,6 @@ void loop() {
     if (PrevSaberState == S_CONFIG) { // we just leaved Config Mode
       saveConfig();
       PrevSaberState = S_STANDBY;
-
       /*
          RESET CONFIG
       */
@@ -1158,6 +1157,8 @@ void loop() {
 #ifdef DEEP_SLEEP
   else if (SaberState == S_SLEEP) {
     if (PrevSaberState == S_CONFIG) { // just entered Sleep mode
+//      SinglePlay_Sound(20);
+//      delay(20);
       byte old_ADCSRA = ADCSRA;
       // disable ADC to save power
       // disable ADC
@@ -1169,6 +1170,7 @@ void loop() {
 
       SleepModeExit();
       SaberState = S_STANDBY;
+      StandbyTime = millis();
       PrevSaberState = S_SLEEP;
       // play boot sound
       ADCSRA = old_ADCSRA;   // re-enable ADC conversion
@@ -1176,7 +1178,15 @@ void loop() {
       delay(20);
     }
   }
+  #ifdef SLEEP_TIMER
+    if ( SaberState == S_SABERON || SaberState == S_CONFIG || SaberState == S_SLEEP || SaberState == S_JUKEBOX ) { StandbyTime = millis(); }
+    if ((millis() - StandbyTime) > SLEEP_TIMER) {
+      SaberState = S_SLEEP;
+      PrevSaberState = S_CONFIG;
+    }
+  #endif
 #endif // DEEP_SLEEP
+
 } //loop
 
 // ====================================================================================

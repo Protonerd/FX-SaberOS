@@ -46,8 +46,8 @@
  * Define only the blade type to be used *
  *****************************************/
 //#define LEDSTRINGS
-#define STAR_LED
-//#define PIXELBLADE
+//#define STAR_LED
+#define PIXELBLADE
 
 /************************************/
 /* SABER TYPE
@@ -201,7 +201,7 @@ static const uint8_t rgbFactor = 100;
  *************************************/
 #define DEEP_SLEEP
 #if defined DEEP_SLEEP
-#define SLEEP_TIMER			20000 //20 secs
+#define SLEEP_TIMER		360000	// sleep after 5 minutes standby, comment for no automatic sleep
 
 #endif  // DEEP_SLEEP
 
@@ -306,10 +306,10 @@ static const uint8_t rgbFactor = 100;
 // ===                      BATTERY CHECK CONFIGURATION                       ===
 // ==============================================================================
 #define BATTERY_CHECK           // comment to disable
-#define BATTERY_FACTOR    6.26  // Callibration value to compensate for component variation
+#define BATTERY_FACTOR    6.34  // Callibration value to compensate for component variation
 #define BATTERY_READPIN   17    //A3 - read battery level 100kohm from GND, 470kohm from Bat+
 #define LOW_BATTERY       3.3   // low voltage for battery, a 5v Arduino or DIYino requires 3.3v 
-#define FULL_BATTERY      4.15  // full voltage for battery, nominally 4.2 for a 3.7v battery
+#define FULL_BATTERY      4.10  // full voltage for battery, nominally 4.2 for a 3.7v battery
 
 // ==============================================================================
 // ===                        CONFIG MENU PARAMETERS                          ===
