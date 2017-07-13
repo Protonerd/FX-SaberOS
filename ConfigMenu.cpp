@@ -1,25 +1,66 @@
 /*
  * Config.cpp
  *
- * Created April 1, 2017
- * author:    Andras Kun (kun.andras@yahoo.de), Jason Brinkerhoff (jb@jbkuma.com)
- * source:    https://github.com/Protonerd/FX-SaberOS
- * 
- * based on LightSaber OS originally created by Sebastien CAPOU (neskweek@gmail.com)
+ * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
+ * Source : 	https://github.com/neskweek/LightSaberOS
+ *      Author: neskw
  */
 #include "ConfigMenu.h"
-#include "Config.h"
+#include "Config_HW.h"
+#include "Config_SW.h"
 #include "Light.h"
+#include "SoundFont.h"
 
-#if defined PIXELBLADE
-#include <WS2812.h>
-#endif
+
+// global Saber state and Sub State variables
+SaberStateEnum SaberState;
+SaberStateEnum PrevSaberState;
+ActionModeSubStatesEnum ActionModeSubStates;
+ConfigModeSubStatesEnum ConfigModeSubStates;
+ActionModeSubStatesEnum PrevActionModeSubStates;
+ConfigModeSubStatesEnum PrevConfigModeSubStates;
+//SubStateEnum SubState;
 
 extern int8_t modification;
 extern bool play;
 extern int16_t value;
+
+
+extern uint8_t ledPins[];
+extern cRGB currentColor;
+#if defined PIXELBLADE
+extern cRGB color;
+#endif
+extern void HumRelaunch();
 extern void SinglePlay_Sound(uint8_t track);
 extern void LoopPlay_Sound(uint8_t track);
+extern void Pause_Sound();
+extern void Resume_Sound();
+extern void Set_Loop_Playback();
+extern void Set_Volume();
+extern void Disable_FTDI(bool ftdi_off);
+extern void Disable_MP3(bool mp3_off);
+extern void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
+    short int multiplier);
+extern uint8_t GravityVector();
+extern void BatLevel_ConfigEnter();
+
+extern struct StoreStruct {
+  // This is for mere detection if they are our settings
+  char version[5];
+  // The settings
+  uint8_t volume;// 0 to 31
+  uint8_t soundFont;// as many as Sound font you have defined in Soundfont.h Max:253
+  struct Profile {
+    cRGB mainColor;
+    cRGB clashColor;
+    cRGB blasterboltColor;
+    uint16_t swingSensitivity;
+    uint8_t flickerType;
+    uint8_t poweronoffType;
+  }sndProfile[SOUNDFONT_QUANTITY];
+}storage;
+extern SoundFont soundFont;
 // ====================================================================================
 // ===           	  	 			CONFIG MODE FUNCTIONS	                		===
 // ====================================================================================
@@ -47,116 +88,126 @@ void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
 	}
 } //confParseValue
 
-// this functions parses in the value of the config variable and based on it plays sounds or activates LEDs
-/*#ifdef COLORS
-void confMenuStart(uint16_t variable, uint16_t sound, uint8_t menu) {
-#else
-void confMenuStart(cRGB variable, uint16_t sound, uint8_t menu) {
-#endif
-  extern uint8_t ledPins[];
-#if defined STAR_LED
-	extern uint8_t currentColor[];
-#endif
-#if defined PIXELBLADE
-	extern cRGB currentColor;
-#endif
-	extern bool enterMenu;
-	if (enterMenu) {
-		SinglePlay_Sound(sound);
-		delay(500);
+void NextConfigState(){
+  if (ConfigModeSubStates!=CS_MAINCOLOR and ConfigModeSubStates!=CS_CLASHCOLOR and ConfigModeSubStates!=CS_BLASTCOLOR) {  
+    lightOff();
+  }
+  if (ConfigModeSubStates== CS_LASTMEMBER) {
+    ConfigModeSubStates=-1;
+  }
+    ConfigModeSubStates=ConfigModeSubStates+1; // change to next config state in the ordered list
+  if (ConfigModeSubStates== (CS_STORAGEACCESS+1)) {
+    Disable_FTDI(false);
+    delay(200);
+    Disable_MP3(false);
+    delay(200);
+  }
+  switch(ConfigModeSubStates) {
+      case CS_VOLUME: 
+        #if defined LS_FSM
+          Serial.print(F("Volume"));
+        #endif  
+        ConfigModeSubStates=CS_VOLUME;
+        BladeMeter(ledPins, storage.volume*100/30);
+        SinglePlay_Sound(4);
+        delay(500);
+        break;
+      case CS_SOUNDFONT: 
+        #if defined LS_FSM
+          Serial.print(F("Sound font"));
+        #endif        
+        lightOff();
+        SinglePlay_Sound(5);
+        delay(600);
+        SinglePlay_Sound(soundFont.getMenu((storage.soundFont)*NR_FILE_SF));
+        delay(500);  
+        break;
+      case CS_MAINCOLOR: 
+        #if defined LS_FSM
+          Serial.print(F("Main color"));
+        #endif        
+        SinglePlay_Sound(6);
+        delay(500); 
+        getColor(storage.sndProfile[storage.soundFont].mainColor);
+        pixelblade_KillKey_Disable();
+        lightOn(ledPins, -1, currentColor, NUMPIXELS/2, NUMPIXELS-6);
+        break;  
+      case CS_CLASHCOLOR: 
+        #if defined LS_FSM
+          Serial.print(F("Clash color"));
+        #endif        
+        SinglePlay_Sound(7);
+        delay(500); 
+        getColor(storage.sndProfile[storage.soundFont].clashColor);
+        pixelblade_KillKey_Disable();
+        lightOn(ledPins, -1, storage.sndProfile[storage.soundFont].clashColor, 1, NUMPIXELS/2-1); 
+        break;
+      case CS_BLASTCOLOR: 
+        #if defined LS_FSM
+          Serial.print(F("Blaster deflect color"));
+        #endif        
+        SinglePlay_Sound(8);
+        delay(500); 
+        getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
+        pixelblade_KillKey_Disable();
+        lightOn(ledPins, -1, storage.sndProfile[storage.soundFont].blasterboltColor, NUMPIXELS*3/4-5, NUMPIXELS*3/4); 
+        break;         
+      case CS_FLICKERTYPE: 
+        #if defined LS_FSM
+          Serial.print(F("Flicker type"));
+        #endif  
+        SinglePlay_Sound(25);
+        delay(700);
+        LoopPlay_Sound(soundFont.getHum((storage.soundFont)*NR_FILE_SF));
+        break;           
+      case CS_POWERONOFFTYPE: 
+        #if defined LS_FSM
+          Serial.print(F("Power on/off type"));
+        #endif  
+        ConfigModeSubStates=CS_POWERONOFFTYPE;
+        SinglePlay_Sound(24);
+        delay(500); 
+        break; 
+      case CS_SWINGSENSITIVITY:
+        #if defined LS_FSM
+          Serial.print(F("Swing Sensitivity"));
+        #endif  
+        SinglePlay_Sound(26);
+        delay(500); 
+        break;  
+      case CS_SLEEPINIT: 
+        #if defined LS_FSM
+          Serial.print(F("Initialize sleep mode"));
+        #endif        
+        SinglePlay_Sound(29);
+        delay(500);
+        break;   
+      case CS_BATTERYLEVEL: 
+        #if defined LS_FSM
+          Serial.print(F("Display battery level"));
+        #endif        
+        BatLevel_ConfigEnter();
+        break;   
+      case CS_STORAGEACCESS: 
+        #if defined LS_FSM
+          Serial.print(F("USB Media storage access"));
+        #endif        
+        SinglePlay_Sound(28);
+        delay(500);
+        Disable_FTDI(true); // disable FTDI to be able to manipulate storage media on board via USB
+        break;   
+      case CS_UARTMODE: 
+        #if defined LS_FSM
+          Serial.print(F("USB board programming access"));
+        #endif        
+        SinglePlay_Sound(27);
+        delay(500);
+        Disable_MP3(true);
+        //delay(1000);
+        Disable_FTDI(false); // enable FTDI again
+        break;   
+        }  
+}
 
-		switch (menu) {
-    case 0:
-#if defined LS_INFO
-      Serial.print(F("SNDFT\nCur:"));
-#endif
-#if defined LEDSTRINGS
-      lightOff();
-      lightOn(ledPins, 1);
-#endif
-      break;
-    case 1:
-#if defined LS_INFO
-			Serial.print(F("VOL\nCur:"));
-#endif
-#if defined LEDSTRINGS
-			lightOff();
-			lightOn(ledPins, 0);
-#endif
-			break;
-#if defined STAR_LED
-    case 2:
-			lightOff(ledPins);
-#if defined LS_INFO
-			Serial.print(F("COLOR1\nCur:"));
-#endif
-			getColor(currentColor, variable);
-			lightOn(ledPins, currentColor);
-			break;
-		case 3:
-			lightOff(ledPins);
-#if defined LS_INFO
-			Serial.print(F("COLOR2\nCur:"));
-#endif
-			getColor(currentColor, variable);
-			lightOn(ledPins, currentColor);
-			break;
-    case 4:
-      lightOff(ledPins);
-#if defined LS_INFO
-      Serial.print(F("COLOR3\nCur:"));
-#endif
-      getColor(currentColor, variable);
-      lightOn(ledPins, currentColor);
-      break;
-#endif
-
-#if defined PIXELBLADE
-    case 2:
-      lightOff();
-
-#if defined LS_INFO
-      Serial.print(F("COLOR1\nCur:"));
-#endif
-      getColor(variable);
-      for (uint8_t i = 0; i < 6; i++) {
-        digitalWrite(ledPins[i], HIGH);
-      }
-      lightOn(currentColor);
-      break;
-    case 3:
-			lightOff();
-
-#if defined LS_INFO
-			Serial.print(F("COLOR2\nCur:"));
-#endif
-			getColor(variable);
-			for (uint8_t i = 0; i < 6; i++) {
-				digitalWrite(ledPins[i], HIGH);
-			}
-			lightOn(currentColor);
-			break;
-		case 4:
-			lightOff();
-#if defined LS_INFO
-			Serial.print(F("COLOR3\nCur:"));
-#endif
-			getColor(variable);
-      for (uint8_t i = 0; i < 6; i++) {
-        digitalWrite(ledPins[i], HIGH);
-      }
-      lightOn(currentColor);
-      break;
-#endif
-		}
-
-#if defined LS_INFO
-		Serial.println(variable);
-#endif
-		value = variable;
-		enterMenu = false;
-		delay(100);
-	}
-} //confMenuStart
-*/                            
+                        
 
