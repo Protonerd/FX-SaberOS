@@ -37,8 +37,8 @@
 #include "Wire.h"
 #include <EEPROMex.h> // include EEPROM library to write the calibrated offset values into the EEPROM
 
-//#define MEMORYBASEMPUCALIBOFFSET 96 // start storing the calibration values starting at this address
-#define MEMORYBASEMPUCALIBOFFSET 200 // start storing the calibration values starting at this address
+//#define MEMORYBASEMPUCALIBOFFSET 96 // start storing the calibration values starting at this address (LSOS 1.4 and earlier)
+#define MEMORYBASEMPUCALIBOFFSET 200 // start storing the calibration values starting at this address (LSOS 1.5+ and FX-SaberOS)
 #define DEBUGVERBOSE
 ///////////////////////////////////   CONFIGURATION   /////////////////////////////
 //Change this 3 variables if you want to fine tune the skecth to your needs.
