@@ -21,8 +21,8 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-//#define DIYINO_PRIME
-#define DIYINO_STARDUST
+#define DIYINO_PRIME
+//#define DIYINO_STARDUST
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -36,7 +36,7 @@
 // If your saber has only a single button to interact with the electronics, uncomment the next line
 // in case you have 2 buttons (referred to as main and aux buttons) leave this line commented out
 
-#define SINGLEBUTTON
+//#define SINGLEBUTTON
  
 #ifdef DIYINO_PRIME 
   #define MAIN_BUTTON     12
@@ -60,8 +60,8 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-#define STAR_LED
-//#define PIXELBLADE
+//#define STAR_LED
+#define PIXELBLADE
 
 /*
  * POWER SAVING CIRCUITRY
@@ -101,7 +101,7 @@
   #endif
 
   // How many leds in one strip?
-  #define NUMPIXELS 120  // can go up to 120, could lead to memory overflow if further increased, causing instability
+  #define NUMPIXELS 60  // can go up to 120, could lead to memory overflow if further increased, causing instability
 
   
   // For led chips like NEOPIXELs, which have a data line, ground, and power, you just

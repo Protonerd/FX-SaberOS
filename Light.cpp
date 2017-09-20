@@ -315,11 +315,11 @@ void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0
     value.r = MAX_BRIGHTNESS * color.r / rgbFactor;
     value.g = MAX_BRIGHTNESS * color.g / rgbFactor;
     value.b = MAX_BRIGHTNESS * color.b / rgbFactor;
-    switch (type) {
-      case 0:
-      // Light up the ledstrings Movie-like
+    //switch (type) {
+    //  case 0:
+    //  // Light up the ledstrings Movie-like
       RampBlade(time, true);
-    }
+    //}
   #endif  
 } // lightIgnition
 
@@ -378,15 +378,15 @@ void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0
   #endif
   
   #ifdef PIXELBLADE
-    switch (type) {
-      case 0:
+    //switch (type) {
+    //  case 0:
       // Light off the ledstrings Movie Like
       cRGB value;
       value.b = 0;
       value.g = 0;
       value.r = 0; // RGB Value -> Off
       RampBlade(time, false);
-      break;
+      //break;
   if (fireblade) { // #ifdef FIREBLADE
     #ifdef CROSSGUARDSABER
       for(unsigned int j=0; j<STRIPE1; j++ ) { // clear the heat static variables
@@ -401,7 +401,7 @@ void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0
       }  
     #endif
   } // #endif
-   }  
+   //}  
   #endif  
 } // lightRetract
 

@@ -226,9 +226,17 @@ Serial.println(configAdress);
     Serial.println(F("EEPROM LOADED"));
   }
 #endif
+// retreive the sound font ID stored in the EEPROM (last configured)
   soundFont.setID(storage.soundFont);
-
-  /***** LOAD CONFIG *****/
+// in case a fireblade flicker type is selected for the active sound font, set the bool variable
+  if (storage.sndProfile[storage.soundFont].flickerType==2 or storage.sndProfile[storage.soundFont].flickerType==3 or storage.sndProfile[storage.soundFont].flickerType==4) {fireblade=true;}
+// if the config menu does not contain a menu item to define swing sensitivity, default it to 1000 (works very well, mid sensitivity)  
+  if (CS_SWINGSENSITIVITY > CS_LASTMEMBER) {
+    for (uint8_t i=0; i<SOUNDFONT_QUANTITY;i++){
+      storage.sndProfile[i].swingSensitivity=1000;      
+    }
+  }
+/***** LOAD CONFIG *****/
 
   /***** MP6050 MOTION DETECTOR INITIALISATION  *****/
 
@@ -644,7 +652,8 @@ void loop() {
        We detect swings as hilt's orientation change
        since IMUs sucks at determining relative position in space
     */
-    else if ((not fireblade) and 
+    //else if ((not fireblade) and 
+    else if (true and 
       (ActionModeSubStates != AS_BLADELOCKUP or lockuponclash)// end lockuponclash event on a swing
       #ifndef SWING_QUATERNION
       and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity // and it has suffisent power on a certain axis
@@ -1394,8 +1403,9 @@ void SleepModeEntry() {
     digitalWrite(ledPins[i], LOW);
   }
   mpu.setSleepEnabled(true);
-  dfplayer.sleep();
   Disable_MP3(true);
+  mpu.setSleepEnabled(true); // included as dummy, for an unknown reason if it's not here and the dfplayer.sleep() is commented out, sound is disabled
+  //dfplayer.sleep();
   pinMode(DFPLAYER_RX, OUTPUT);
   digitalWrite(DFPLAYER_RX, LOW);
   pinMode(DFPLAYER_TX, OUTPUT);
