@@ -25,9 +25,6 @@ extern ActionModeSubStatesEnum PrevActionModeSubStates;
 extern ConfigModeSubStatesEnum PrevConfigModeSubStates;
 //extern SubStateEnum SubState;
 
-// button action enum
-enum ButtonActionEnum{SINGLE_CLICK, DOUBLE_CLICK, LONGPRESS, LONGPRESS_START, LONGPRESS_STOP};
-//ButtonActionEnum ButtonActionTye;
 
 extern unsigned long sndSuppress;
 extern bool hum_playing;
@@ -89,9 +86,9 @@ extern bool fireblade;
 // ===               			BUTTONS CALLBACK FUNCTIONS                 			===
 // ====================================================================================
 
-void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonActionType){
+void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonActionType, int8_t incrementSign=1){
     if (ConfigModeSubStates == CS_VOLUME) {
-      confParseValue(storage.volume, 5, 30, 1);
+      confParseValue(storage.volume, 5, 30, 1*incrementSign);
       storage.volume = value;
       BladeMeter(ledPins, value*100/30);
       Set_Volume();
@@ -101,7 +98,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
     }
     else if (ConfigModeSubStates == CS_SOUNDFONT and ButtonActionType==SINGLE_CLICK) {
       play = false;
-      confParseValue(storage.soundFont, 0, SOUNDFONT_QUANTITY - 1, 1);
+      confParseValue(storage.soundFont, 0, SOUNDFONT_QUANTITY - 1, 1*incrementSign);
       storage.soundFont = value;
       soundFont.setID(value);
       SinglePlay_Sound(soundFont.getMenu((storage.soundFont)*NR_FILE_SF));
@@ -138,13 +135,13 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
   #endif // PIXELBLADE or STAR_LED  
     else if (ConfigModeSubStates == CS_FLICKERTYPE) {
       #ifdef LEDSTRINGS
-        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 2, 1); // max number of flicker types for LEDSTRINGS currently 3
+        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 2, 1*incrementSign); // max number of flicker types for LEDSTRINGS currently 3
       #endif
       #ifdef STAR_LED
-        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 2, 1); // max number of flicker types for STAR_LED currently 3
+        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 2, 1*incrementSign); // max number of flicker types for STAR_LED currently 3
       #endif
       #ifdef PIXELBLADE
-        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 4, 1); // max number of flicker types for PIXELBLADE currently 5
+        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 4, 1*incrementSign); // max number of flicker types for PIXELBLADE currently 5
       #endif
       storage.sndProfile[storage.soundFont].flickerType = value;
       #if defined PIXELBLADE
@@ -157,7 +154,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
     }
     else if (ConfigModeSubStates == CS_SWINGSENSITIVITY) {
       // 2048LSB/g, -32k to +32k, but usable range is ~16384
-      confParseValue(storage.sndProfile[storage.soundFont].swingSensitivity, 0, 16000, 100);
+      confParseValue(storage.sndProfile[storage.soundFont].swingSensitivity, 0, 16000, 100*incrementSign);
       storage.sndProfile[storage.soundFont].swingSensitivity = value;
       #if defined LS_INFO
         Serial.println(storage.sndProfile[storage.soundFont].swingSensitivity);
@@ -201,8 +198,8 @@ void mainClick() {
     }
     #endif // DEEP_SLEEP
     if (ConfigModeSubStates != CS_FLICKERTYPE) {
-    SinglePlay_Sound(1);
-    delay(50);
+      SinglePlay_Sound(1);
+      delay(50);
     }
     ConfigMenuButtonEventHandler(true, SINGLE_CLICK);
 	}
@@ -393,7 +390,7 @@ void lockupClick() {
       SinglePlay_Sound(2);
       delay(50);
     }
-      ConfigMenuButtonEventHandler(true, LONGPRESS_STOP);
+      ConfigMenuButtonEventHandler(true, SINGLE_CLICK,-1);
 
 	} 
 #ifdef JUKEBOX

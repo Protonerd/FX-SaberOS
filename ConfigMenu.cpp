@@ -92,10 +92,13 @@ void NextConfigState(){
   if (ConfigModeSubStates!=CS_MAINCOLOR and ConfigModeSubStates!=CS_CLASHCOLOR and ConfigModeSubStates!=CS_BLASTCOLOR) {  
     lightOff();
   }
+  ConfigModeSubStates=ConfigModeSubStates+1; // change to next config state in the ordered list
   if (ConfigModeSubStates== CS_LASTMEMBER) {
-    ConfigModeSubStates=-1;
+    ConfigModeSubStates=0; // after the last config menu item go back to the first
   }
-    ConfigModeSubStates=ConfigModeSubStates+1; // change to next config state in the ordered list
+
+  Serial.println(ConfigModeSubStates);
+    
   if (ConfigModeSubStates== (CS_STORAGEACCESS+1)) {
     Disable_FTDI(false);
     delay(200);
