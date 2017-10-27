@@ -1,3 +1,5 @@
+![alt text](https://github.com/Protonerd/FX-SaberOS/blob/master/README/22489987_10214390565742471_6678630774083988688_n.jpg)
+
 # FX-SaberOS
 System code for Arduino based Lightsaber replicas for DIYino family boards and Arduino based home brew systems.
 
