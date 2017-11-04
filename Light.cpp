@@ -66,12 +66,12 @@ static uint8_t Fire_Cooling = 50;
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
 static uint8_t Fire_Sparking = 100;
-#ifdef CROSSGUARDSABER
-static byte heat[MN_STRIPE];  
-static byte heat_cg[CG_STRIPE];
-#else
+//#ifdef CROSSGUARDSABER
+//static byte heat[MN_STRIPE];  
+//static byte heat_cg[CG_STRIPE];
+//#else
 static byte heat[NUMPIXELS];  
-#endif
+//#endif
 #define PIXELSTEP 5// how many pixel to treat as a group to save on processing capability
 #endif  // PIXELBLADE
 
@@ -184,7 +184,7 @@ void getColor(cRGB color={0,0,0}) {
   #endif  
 } // getColor
 
-void RampBlade(uint16_t RampDuration, bool DirectionUpDown) {
+void RampBlade(uint16_t RampDuration, bool DirectionUpDown, uint8_t startpixel=0, uint8_t stoppixel=NUMPIXELS) {
   #if defined LEDSTRINGS
   
   #endif
@@ -198,12 +198,12 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown) {
       unsigned long ignitionStart = millis();  //record start of ramp function
       cRGB value;
     if (fireblade) { // #ifdef FIREBLADE
-      for (unsigned int i=0; i<NUMPIXELS; (i=i+5)) { // turn on/off one LED at a time
+      for (unsigned int i=startpixel; i<stoppixel; (i=i+5)) { // turn on/off one LED at a time
          FireBlade(storage.sndProfile[storage.soundFont].flickerType-2);
-         for(unsigned int j=0; j<NUMPIXELS; j++ ) { // fill up string with data
-          if ((DirectionUpDown and j<=i) or (!DirectionUpDown and j<=NUMPIXELS-1-i)){
+         for(unsigned int j=0; j<stoppixel; j++ ) { // fill up string with data
+          if ((DirectionUpDown and j<=i) or (!DirectionUpDown and j<=stoppixel-1-i)){
             }
-            else if ((DirectionUpDown and j>i) or (!DirectionUpDown and j>NUMPIXELS-1-i)){
+            else if ((DirectionUpDown and j>i) or (!DirectionUpDown and j>stoppixel-1-i)){
               value.r=0;
               value.g=0;
               value.b=0;  
@@ -215,11 +215,11 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown) {
         }    
     } // fireblade
     else { //#else
-      for (unsigned int i = 0; i < NUMPIXELS; i = NUMPIXELS*(millis()-ignitionStart)/RampDuration) { // turn on/off the number of LEDs that match rap timing
+      for (unsigned int i = startpixel; i < stoppixel; i = stoppixel*(millis()-ignitionStart)/RampDuration) { // turn on/off the number of LEDs that match rap timing
           //generate a flicker effect between 65% and 115% of MAX_BRIGHTNESS, with a 1 in 115 chance of flicking to 0
           int flickFactor = random(0,115);
           if (flickFactor < 65 && flickFactor > 0) { flickFactor = 100; } 
-         for(uint8_t  j=0; j<NUMPIXELS; j++ ) { // fill up string with data
+         for(uint8_t  j=startpixel; j<stoppixel; j++ ) { // fill up string with data
           if ((DirectionUpDown and j<=i)){
             value.r = MAX_BRIGHTNESS * i / NUMPIXELS * currentColor.r / rgbFactor * flickFactor / 100;
             value.g = MAX_BRIGHTNESS * i / NUMPIXELS * currentColor.g / rgbFactor * flickFactor / 100;
@@ -236,13 +236,13 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown) {
           pixels.set_crgb_at(j, value);
         }
          pixels.sync(); // Sends the data to the LEDs
-         delay(RampDuration/NUMPIXELS); //match the ramp duration to the number of pixels in the string
+         delay(RampDuration/(stoppixel-startpixel)); //match the ramp duration to the number of pixels in the string
       }
     } // #endif
   #endif  
 } // RampBlade
 
-void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0,0,0}) {
+void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0,0,0}, uint8_t startpixel=0, uint8_t stoppixel=NUMPIXELS) {
   #if defined LEDSTRINGS
   
   uint8_t LS_Status[6];
@@ -318,7 +318,7 @@ void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0
     //switch (type) {
     //  case 0:
     //  // Light up the ledstrings Movie-like
-      RampBlade(time, true);
+      RampBlade(time, true, startpixel, stoppixel);
     //}
   #endif  
 } // lightIgnition
@@ -388,18 +388,18 @@ void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0
       RampBlade(time, false);
       //break;
   if (fireblade) { // #ifdef FIREBLADE
-    #ifdef CROSSGUARDSABER
-      for(unsigned int j=0; j<STRIPE1; j++ ) { // clear the heat static variables
+/*    #ifdef CROSSGUARDSABER
+      for(unsigned int j=0; j<CG_STRIPE; j++ ) { // clear the heat static variables
         heat_cg[j]=0;
       }  
-      for(unsigned int j=0; j<STRIPE2; j++ ) { // clear the heat static variables
+      for(unsigned int j=0; j<MN_STRIPE; j++ ) { // clear the heat static variables
         heat[j]=0;
       } 
-    #else
+    #else */
       for(unsigned int j=0; j<NUMPIXELS; j++ ) { // clear the heat static variables
         heat[j]=0;
       }  
-    #endif
+    //#endif
   } // #endif
    //}  
   #endif  
@@ -746,18 +746,26 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
     blastcolor.g=currentColor.b;
     getColor(SndFnt_MainColor);  // get the main blade color for the fading effect
     for (uint8_t i = 0; i<=2*range-1;i++) {
-      for (uint8_t j = 0; j <=range; j++) {
-        if (j==i) {
-          pixels.set_crgb_at(pixel-j, blastcolor);
-          pixels.set_crgb_at(pixel+j, blastcolor);
+      if (fireblade) {
+        // fully cool down (switch off LED) of a small segment of the blade, which will go up afterwards
+        heat[pixel-i] = 0; // white hot fire burst along the whole blade
+      }
+      else {
+        for (uint8_t j = 0; j <=range; j++) {
+          if (j==i) {
+            pixels.set_crgb_at(pixel-j, blastcolor);
+            pixels.set_crgb_at(pixel+j, blastcolor);
+          }
+          else {
+            pixels.set_crgb_at(pixel-j, currentColor);
+            pixels.set_crgb_at(pixel+j, currentColor);
+          }
         }
-        else {
-          pixels.set_crgb_at(pixel-j, currentColor);
-          pixels.set_crgb_at(pixel+j, currentColor);
+        pixels.sync();
+        if (not fireblade) {
+          delay(BLASTER_FX_DURATION/(2*range));  // blast deflect should last for ~500ms
         }
       }
-      pixels.sync();
-      delay(BLASTER_FX_DURATION/(2*range));  // blast deflect should last for ~500ms
     }
   #endif
 } // lightBlasterEffect
@@ -802,8 +810,13 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
   
   #if defined PIXELBLADE
     if (fireblade) { // #if defined FIREBLADE  // simply flash white
-          getColor(storage.sndProfile[storage.soundFont].clashColor);
-          lightOn(ledPins, -1, currentColor);
+          //getColor(storage.sndProfile[storage.soundFont].clashColor);
+          //lightOn(ledPins, -1, currentColor);
+          for( int i = 0; i < NUMPIXELS; i++) {
+            // the random() function in this loop causes phantom swings
+            heat[i] = constrain(heat[i]+70,0,255); // white hot fire burst along the whole blade
+          }
+          
     } // fireblade
     else { // #else
           getColor(storage.sndProfile[storage.soundFont].clashColor);
@@ -980,36 +993,36 @@ void FireBlade(uint8_t DominantColor) {
   int pixelnumber;
   
   // Step 1.  Cool down every cell a little
-#ifdef CROSSGUARDSABER
+/*#ifdef CROSSGUARDSABER
     for( int i = 0; i < MN_STRIPE; i++) {
       heat[i] = constrain(heat[i] - random(((Fire_Cooling * 10) / MN_STRIPE) + 2),0,255);
     }
     for( int i = 0; i < CG_STRIPE; i++) {
       heat_cg[i] = constrain(heat_cg[i] - random(5),0,255);
     }
-#else
+#else */
     for( int i = 0; i < NUMPIXELS; i++) {
       // the random() function in this loop causes phantom swings
       heat[i] = constrain(heat[i] - random(((Fire_Cooling * 10) / NUMPIXELS) + 2),0,255);
     }
-#endif
+//#endif
 
     // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-#ifdef CROSSGUARDSABER
+/*#ifdef CROSSGUARDSABER
     for( int k= MN_STRIPE - 1; k >= 2; k--) {
       heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
     }
     for( int k= CG_STRIPE - 1; k >= 2; k--) {
       heat_cg[k] = (heat_cg[k - 1] + heat_cg[k - 2] + heat_cg[k - 2] ) / 3;
     }
-#else
+#else*/
     for( int k= NUMPIXELS - 1; k >= 2; k--) {
       heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
     }
-#endif
+//#endif
     
     // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
-#ifdef CROSSGUARDSABER
+/*#ifdef CROSSGUARDSABER
     if( random(255) < Fire_Sparking ) {
       int y = random(7);
       heat[y] = constrain(heat[y] + random(95)+160,0,255 );
@@ -1018,15 +1031,15 @@ void FireBlade(uint8_t DominantColor) {
       int y = random(4);
       heat_cg[y] = constrain(heat_cg[0] + random(95)+160,0,255 );  
     } 
-#else
+#else*/
     if( random(255) < Fire_Sparking ) {
       int y = random(7);
       heat[y] = constrain(heat[y] + random(95)+160,0,255 );
     }
-#endif
+//#endif
 
     // Step 4.  Map from heat cells to LED colors 
-#ifdef CROSSGUARDSABER
+/*#ifdef CROSSGUARDSABER
     for( int j = 0; j < CG_STRIPE; j++) {
       cRGB color = HeatColor( heat_cg[j],DominantColor);
       //if( gReverseDirection ) {
@@ -1045,12 +1058,12 @@ void FireBlade(uint8_t DominantColor) {
       //}
       pixels.set_crgb_at(j, color); // Set value at LED found at index j
     }
-#else
+#else*/
     for( int j = 0; j < NUMPIXELS; j++) {
        cRGB color = HeatColor( heat[j],DominantColor);
         pixels.set_crgb_at(j, color); // Set value at LED found at index j
     }
-#endif
+//#endif
 }
 
 // CRGB HeatColor( uint8_t temperature)

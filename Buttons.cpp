@@ -58,7 +58,7 @@ extern void LoopPlay_Sound(uint8_t track);
 extern void Pause_Sound();
 extern void Resume_Sound();
 extern void Set_Loop_Playback();
-extern void Set_Volume(int8_t volumeSet=-1);
+extern void Set_Volume(int8_t volumeSet);
 extern void Disable_FTDI(bool ftdi_off);
 extern void Disable_MP3(bool mp3_off);
 extern void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
@@ -91,7 +91,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       confParseValue(storage.volume, 5, 30, 1*incrementSign);
       storage.volume = value;
       BladeMeter(ledPins, value*100/30);
-      Set_Volume();
+      Set_Volume(storage.volume);
       #if defined LS_INFO
               Serial.println(storage.volume);
       #endif      
@@ -133,7 +133,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       delay(50);
     }
   #endif // PIXELBLADE or STAR_LED  
-    else if (ConfigModeSubStates == CS_FLICKERTYPE) {
+    else if (ConfigModeSubStates == CS_FLICKERTYPE and ButtonActionType==SINGLE_CLICK) {
       #ifdef LEDSTRINGS
         confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 2, 1*incrementSign); // max number of flicker types for LEDSTRINGS currently 3
       #endif
@@ -152,14 +152,14 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
         Serial.println(storage.sndProfile[storage.soundFont].flickerType);
       #endif      
     }
-    else if (ConfigModeSubStates == CS_SWINGSENSITIVITY) {
-      // 2048LSB/g, -32k to +32k, but usable range is ~16384
-      confParseValue(storage.sndProfile[storage.soundFont].swingSensitivity, 0, 16000, 100*incrementSign);
+    else if (ConfigModeSubStates == CS_SWINGSENSITIVITY and ButtonActionType==SINGLE_CLICK) {
+      // 2048LSB/g, -32k to +32k, but usable range is ~16384(=1g acceleration), increment with 1/100th of a g
+      confParseValue(storage.sndProfile[storage.soundFont].swingSensitivity, 0, 16000, 160*incrementSign);
       storage.sndProfile[storage.soundFont].swingSensitivity = value;
       #if defined LS_INFO
         Serial.println(storage.sndProfile[storage.soundFont].swingSensitivity);
       #endif
-      BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/160);     
+      BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);     
     }
 }
 
@@ -317,7 +317,7 @@ void mainLongPressStart() {
     #ifdef PIXELBLADE
       pixelblade_KillKey_Disable();
     #endif
-    Set_Volume();
+    Set_Volume(storage.volume);
     delay(200);
   }
 #endif
@@ -474,7 +474,7 @@ void lockupLongPressStart() {
         #ifdef PIXELBLADE
           pixelblade_KillKey_Disable();
         #endif
-        Set_Volume();
+        Set_Volume(storage.volume);
         delay(200);      }
 	} else if (SaberState==S_STANDBY) {
 //Entering Config Mode

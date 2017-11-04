@@ -63,6 +63,17 @@
 //#define STAR_LED
 #define PIXELBLADE
 
+/************************************/
+/*
+ * SABER TYPE
+ * currently in v1.3 only the CROSSGUARDSABER
+ * will have any effect on the code
+ * due to the fire blade effect
+ *************************************/
+#define SINGLEBLADE  // i.e. Graflex
+//#define SABERSTAFF  // i.e. Darth Maul saber with dual blades
+//#define CROSSGUARDSABER  // i.e. Kylo Ren saber
+
 /*
  * POWER SAVING CIRCUITRY
  * Definition of the power switches (DIYino Prime v1.5 or greater, STARDUST
@@ -112,6 +123,7 @@
     // define how many pixels are used for the crossguard and how many for the main blade
     #define CG_STRIPE 10 // cross guard stripe length
     #define MN_STRIPE 50 // main blade stripe length
+    #define STAGGERED_IGNITION_DELAY 1000
   #endif
 
 
@@ -169,21 +181,6 @@
     #define BATTERY_READPIN 15
   #endif
 #endif
-
-
-/************************************/
-/*
- * SABER TYPE
- * currently in v1.3 only the CROSSGUARDSABER
- * will have any effect on the code
- * due to the fire blade effect
- *************************************/
-#define SINGLEBLADE  // i.e. Graflex
-//#define SABERSTAFF  // i.e. Darth Maul saber with dual blades
-//#define CROSSGUARDSABER  // i.e. Kylo Ren saber
-
-
-
 
 /*!!!!!IMPORTANT IMPORTANT IMPORTANT IMPORTANT IMPORTANT!!!
  *

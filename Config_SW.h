@@ -149,7 +149,7 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
 #define LS_SERIAL  //enable serial communication using Wire library
 #if defined LS_SERIAL
 //#define LS_FSM
-//#define LS_INFO
+#define LS_INFO
 //#define LS_DEBUG
 #endif
 

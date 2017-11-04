@@ -1,9 +1,7 @@
     /*
-   FX-SaberOS V1.6.1
+   FX-SaberOS V1.0
 
-   Modified from LSOS 1.5 2017 March 3
-storage.sndProfile[storage.soundFont].swingSensitivity
-   released on: 21 Octber 2016
+   released on: 7 October 2017
    author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
    Source : 	https://github.com/Protonerd/FX-SaberOS
    Description:	Operating System for Arduino based LightSaber
@@ -52,9 +50,6 @@ bool hum_playing = false; // variable to store whether hum is being played
 bool jukebox_play = false; // indicate whether a song is being played in JukeBox mode
 uint8_t jb_track;  // sound file track number in the directory designated for music playback
 #endif
-
-// for an unknown reason code fails to compile recently if this function is not pre-defined here
-void Set_Volume(int8_t volumeSet=-1);
 
 /***************************************************************************************************
  * Saber Finite State Machine Custom Type and State Variable
@@ -184,7 +179,6 @@ void setup() {
 	// Serial line for debug
 	Serial.begin(115200);
 
-
 	/***** LOAD CONFIG *****/
 	// Get config from EEPROM if there is one
 	// or initialise value with default ones set in StoreStruct
@@ -226,16 +220,24 @@ Serial.println(configAdress);
     Serial.println(F("EEPROM LOADED"));
   }
 #endif
+
 // retreive the sound font ID stored in the EEPROM (last configured)
   soundFont.setID(storage.soundFont);
 // in case a fireblade flicker type is selected for the active sound font, set the bool variable
   if (storage.sndProfile[storage.soundFont].flickerType==2 or storage.sndProfile[storage.soundFont].flickerType==3 or storage.sndProfile[storage.soundFont].flickerType==4) {fireblade=true;}
+
+/* CONFIG ITEMS PRESETS */
+/* Set default values to parameters which can be modified in config menu, if the corresponding config menu item is disabled */  
 // if the config menu does not contain a menu item to define swing sensitivity, default it to 1000 (works very well, mid sensitivity)  
   if (CS_SWINGSENSITIVITY > CS_LASTMEMBER) {
     for (uint8_t i=0; i<SOUNDFONT_QUANTITY;i++){
       storage.sndProfile[i].swingSensitivity=1000;      
     }
   }
+  if (CS_VOLUME > CS_LASTMEMBER) {
+    storage.volume=31;
+  }  
+
 /***** LOAD CONFIG *****/
 
   /***** MP6050 MOTION DETECTOR INITIALISATION  *****/
@@ -313,8 +315,6 @@ Serial.println(configAdress);
   mpu.setYGyroOffset(-11);
   mpu.setZGyroOffset(44);
 #endif
-
-
 
   // make sure it worked (returns 0 if so)
   if (devStatus == 0) {
@@ -447,8 +447,9 @@ Serial.println(configAdress);
   InitDFPlayer();
 
   delay(200);
-  pinMode(SPK1, INPUT);
-  pinMode(SPK2, INPUT);
+ // according to debug on 3.11.2017, these 2 lines below cause the sporadic disable of sound. For audio tracker they are not strictly needed.
+  //pinMode(SPK1, INPUT);
+  //pinMode(SPK2, INPUT);
   SinglePlay_Sound(11);
   delay(20);
 
@@ -480,6 +481,7 @@ Serial.println(configAdress);
   PrevSaberState = S_SLEEP;
   ActionModeSubStates = AS_HUM;
   //Disable_MP3(true);  // disable the MP3 in Stand-by mode to enable FTDI communication
+
 }
 
 // ====================================================================================
@@ -537,8 +539,12 @@ void loop() {
       SinglePlay_Sound(soundFont.getPowerOn((storage.soundFont)*NR_FILE_SF));
       // Light up the blade
       pixelblade_KillKey_Disable();
-      lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor);
-
+      #ifdef CROSSGUARDSABER
+        lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor, 11, 60);
+      #else // single blade or saber staff
+        lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor);
+      #endif
+      
       sndSuppress = millis()-soundFont.getPowerOnTime();
       sndSuppress2 = millis();
 
@@ -553,6 +559,13 @@ void loop() {
       //digitalWrite(ACCENT_LED, HIGH);
 #endif
     }
+    #ifdef CROSSGUARDSABER
+      if (millis()-sndSuppress2>STAGGERED_IGNITION_DELAY) {
+        SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
+        lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor, 0, 10);
+        sndSuppress2=millis();
+      }
+    #endif
 
     // ************************* blade movement detection ************************************
     //Let's get our values !
@@ -596,8 +609,9 @@ void loop() {
           */
           ActionModeSubStates = AS_CLASH;
           lightClashEffect(ledPins, storage.sndProfile[storage.soundFont].clashColor);
-          delay(CLASH_FX_DURATION);  // clash duration
-
+          if (!fireblade) {
+            delay(CLASH_FX_DURATION);  // clash duration
+          }
         }
       }
     }
@@ -626,7 +640,7 @@ void loop() {
         //getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
         //lightOn(ledPins, -1, currentColor);
         blasterPixel = random(NUMPIXELS / 4, NUMPIXELS - 3); //momentary shut off one led segment
-        getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
+        //getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
         //            lightBlasterEffect(blasterPixel, 3, storage.sndProfile[storage.soundFont].mainColor);
         lightBlasterEffect(ledPins, blasterPixel, map(NUMPIXELS, 0, 120, 1, 3), storage.sndProfile[storage.soundFont].blasterboltColor);
       }
@@ -639,7 +653,7 @@ void loop() {
 
       } // #endif
 #endif
-        delay(BLASTER_FX_DURATION);  // blaster bolt deflect duration
+        //delay(BLASTER_FX_DURATION);  // blaster bolt deflect duration
         // Some Soundfont may not have Blaster sounds
         if (millis() - sndSuppress > 50) {
           //SinglePlay_Sound(soundFont.getBlaster((storage.soundFont)*NR_FILE_SF));
@@ -652,8 +666,8 @@ void loop() {
        We detect swings as hilt's orientation change
        since IMUs sucks at determining relative position in space
     */
-    //else if ((not fireblade) and 
-    else if (true and 
+    else if ((not fireblade) and 
+    //else if (true and 
       (ActionModeSubStates != AS_BLADELOCKUP or lockuponclash)// end lockuponclash event on a swing
       #ifndef SWING_QUATERNION
       and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity // and it has suffisent power on a certain axis
@@ -899,7 +913,7 @@ void loop() {
           // turn on the volume full
           storage.volume = 30; //MAX
           BladeMeter(ledPins, storage.volume*100/30);
-          Set_Volume(); // Too Slow: we'll change volume on exit
+          Set_Volume(storage.volume); // Too Slow: we'll change volume on exit
           delay(50);
           #if defined LS_INFO
             Serial.println(storage.volume);
@@ -912,9 +926,9 @@ void loop() {
         case CS_POWERONOFFTYPE:
           break;
         case CS_SWINGSENSITIVITY:
-        // upon clash increase swing sensitivity by 1000
-        if (storage.sndProfile[storage.soundFont].swingSensitivity < 15000 ) {
-          storage.sndProfile[storage.soundFont].swingSensitivity=storage.sndProfile[storage.soundFont].swingSensitivity+1000;
+        // upon clash increase swing sensitivity by 1/10th of a g (1g=16384)
+        if (storage.sndProfile[storage.soundFont].swingSensitivity <= 14400 ) {
+          storage.sndProfile[storage.soundFont].swingSensitivity=storage.sndProfile[storage.soundFont].swingSensitivity+1600;
         }
         else {
           storage.sndProfile[storage.soundFont].swingSensitivity=0;
@@ -928,7 +942,7 @@ void loop() {
           else { // 
             storage.sndProfile[storage.soundFont].swingSensitivity=100;
           }*/
-          BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/160);
+          BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);
           Serial.println(storage.sndProfile[storage.soundFont].swingSensitivity);
           break;
         case CS_SLEEPINIT:
@@ -1330,13 +1344,13 @@ void LoopPlay_Sound(uint8_t track) {
   dfplayer.playSingleLoop(track);
 }
 
-void Set_Volume(int8_t volumeSet=-1) {
-  if (volumeSet == -1) {  // as a default retreive volume setting from config storage
-    dfplayer.setVolume(storage.volume); // Too Slow: we'll change volume on 
-  }
-  else {
+void Set_Volume(int8_t volumeSet) {
+  //if (volumeSet == -1) {  // as a default retreive volume setting from config storage
+  //  dfplayer.setVolume(storage.volume); // Too Slow: we'll change volume on 
+  //}
+  //else {
     dfplayer.setVolume(volumeSet);
-  }
+  //}
   delay(50);
 }
 
@@ -1349,10 +1363,10 @@ void InitDFPlayer() {
   // AK 7.9.2016: if the storage.volume has no or invalid value, it will cause the
   // sketch to repeat setup (reset itself) - up till now no idea why?
   // this can happen if the EEPROM is erased (i.e. reflash of bootloader)
-  if (CS_LASTMEMBER < CS_VOLUME) { // if the volume cannot be set from the config menu, set it to the loudest
-    storage.volume=30;
-  }
-  dfplayer.setVolume(storage.volume);
+  //if (CS_LASTMEMBER < CS_VOLUME) { // if the volume cannot be set from the config menu, set it to the loudest
+  //  storage.volume=31;
+  //}
+  //dfplayer.setVolume(storage.volume);
   //setup finished. Boot ready. We notify !
 }
 

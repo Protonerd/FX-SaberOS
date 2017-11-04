@@ -175,6 +175,7 @@ void NextConfigState(){
         #if defined LS_FSM
           Serial.print(F("Swing Sensitivity"));
         #endif  
+        BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);
         SinglePlay_Sound(26);
         delay(500); 
         break;  
