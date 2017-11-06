@@ -184,7 +184,7 @@ void getColor(cRGB color={0,0,0}) {
   #endif  
 } // getColor
 
-void RampBlade(uint16_t RampDuration, bool DirectionUpDown, uint8_t startpixel=0, uint8_t stoppixel=NUMPIXELS) {
+void RampBlade(uint16_t RampDuration, bool DirectionUpDown, int8_t StartPixel=-1, int8_t StopPixel=-1) {
   #if defined LEDSTRINGS
   
   #endif
@@ -194,16 +194,19 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, uint8_t startpixel=0
   #endif
   
   #ifdef PIXELBLADE
-    // neopixel ramp code from jbkuma
-      unsigned long ignitionStart = millis();  //record start of ramp function
-      cRGB value;
+    unsigned long ignitionStart = millis();  //record start of ramp function
+    cRGB value;
+    if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe    // neopixel ramp code from jbkuma
+      StartPixel=0;
+      StopPixel= NUMPIXELS; 
+    }
     if (fireblade) { // #ifdef FIREBLADE
-      for (unsigned int i=startpixel; i<stoppixel; (i=i+5)) { // turn on/off one LED at a time
+      for (unsigned int i=StartPixel; i<StopPixel; (i=i+5)) { // turn on/off one LED at a time
          FireBlade(storage.sndProfile[storage.soundFont].flickerType-2);
-         for(unsigned int j=0; j<stoppixel; j++ ) { // fill up string with data
-          if ((DirectionUpDown and j<=i) or (!DirectionUpDown and j<=stoppixel-1-i)){
+         for(unsigned int j=0; j<StopPixel; j++ ) { // fill up string with data
+          if ((DirectionUpDown and j<=i) or (!DirectionUpDown and j<=StopPixel-1-i)){
             }
-            else if ((DirectionUpDown and j>i) or (!DirectionUpDown and j>stoppixel-1-i)){
+            else if ((DirectionUpDown and j>i) or (!DirectionUpDown and j>StopPixel-1-i)){
               value.r=0;
               value.g=0;
               value.b=0;  
@@ -215,11 +218,11 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, uint8_t startpixel=0
         }    
     } // fireblade
     else { //#else
-      for (unsigned int i = startpixel; i < stoppixel; i = stoppixel*(millis()-ignitionStart)/RampDuration) { // turn on/off the number of LEDs that match rap timing
+      for (unsigned int i = StartPixel; i < StopPixel; i = StopPixel*(millis()-ignitionStart)/RampDuration) { // turn on/off the number of LEDs that match rap timing
           //generate a flicker effect between 65% and 115% of MAX_BRIGHTNESS, with a 1 in 115 chance of flicking to 0
           int flickFactor = random(0,115);
           if (flickFactor < 65 && flickFactor > 0) { flickFactor = 100; } 
-         for(uint8_t  j=startpixel; j<stoppixel; j++ ) { // fill up string with data
+         for(uint8_t  j=StartPixel; j<StopPixel; j++ ) { // fill up string with data
           if ((DirectionUpDown and j<=i)){
             value.r = MAX_BRIGHTNESS * i / NUMPIXELS * currentColor.r / rgbFactor * flickFactor / 100;
             value.g = MAX_BRIGHTNESS * i / NUMPIXELS * currentColor.g / rgbFactor * flickFactor / 100;
@@ -236,13 +239,13 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, uint8_t startpixel=0
           pixels.set_crgb_at(j, value);
         }
          pixels.sync(); // Sends the data to the LEDs
-         delay(RampDuration/(stoppixel-startpixel)); //match the ramp duration to the number of pixels in the string
+         delay(RampDuration/(StopPixel-StartPixel)); //match the ramp duration to the number of pixels in the string
       }
     } // #endif
   #endif  
 } // RampBlade
 
-void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0,0,0}, uint8_t startpixel=0, uint8_t stoppixel=NUMPIXELS) {
+void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0,0,0}, int8_t StartPixel=-1, int8_t StopPixel=-1) {
   #if defined LEDSTRINGS
   
   uint8_t LS_Status[6];
@@ -312,13 +315,17 @@ void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0
   
   #ifdef PIXELBLADE
     cRGB value;
+    if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe    // neopixel ramp code from jbkuma
+      StartPixel=0;
+      StopPixel= NUMPIXELS; 
+    }
     value.r = MAX_BRIGHTNESS * color.r / rgbFactor;
     value.g = MAX_BRIGHTNESS * color.g / rgbFactor;
     value.b = MAX_BRIGHTNESS * color.b / rgbFactor;
     //switch (type) {
     //  case 0:
     //  // Light up the ledstrings Movie-like
-      RampBlade(time, true, startpixel, stoppixel);
+      RampBlade(time, true, StartPixel, StopPixel);
     //}
   #endif  
 } // lightIgnition
@@ -405,7 +412,7 @@ void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0
   #endif  
 } // lightRetract
 
-void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincolor={0,0,0}, cRGB clashcolor={0,0,0},uint8_t AState=0) {
+void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincolor={0,0,0}, cRGB clashcolor={0,0,0},uint8_t AState=0, int8_t StartPixel=-1 , int8_t StopPixel=-1) {
     uint8_t variation = abs(analogRead(SPK1) - analogRead(SPK2));
     uint8_t brightness;
 
@@ -533,6 +540,10 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
   #endif
   
   #ifdef PIXELBLADE
+      if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe    // neopixel ramp code from jbkuma
+        StartPixel=0;
+        StopPixel= NUMPIXELS; 
+      }
       int flickFactor = random(0,255);
       if (flickFactor > 3 && flickFactor < 170) { flickFactor = 255; }
       //brightness = 255 * flickFactor / 100;
@@ -565,7 +576,7 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
           color.b = brightness * maincolor.b / rgbFactor;
         }
       
-        for (uint16_t i = 0; i <= NUMPIXELS; i++) {
+        for (uint16_t i = StartPixel; i <= StopPixel; i++) {
             pixels.set_crgb_at(i, color); 
         }
         pixels.sync();
@@ -590,7 +601,7 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
           else if (pulseflicker_pwm == 0) {
             pulsedir=true;
           }
-           for (uint16_t i = 0; i <= NUMPIXELS; i++) {
+           for (uint16_t i = StartPixel; i <= StopPixel; i++) {
               pixels.set_crgb_at(i, color); 
           }
   

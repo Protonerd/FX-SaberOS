@@ -50,6 +50,9 @@ bool hum_playing = false; // variable to store whether hum is being played
 bool jukebox_play = false; // indicate whether a song is being played in JukeBox mode
 uint8_t jb_track;  // sound file track number in the directory designated for music playback
 #endif
+#ifdef CROSSGUARDSABER
+bool mainignition_done=false;
+#endif
 
 /***************************************************************************************************
  * Saber Finite State Machine Custom Type and State Variable
@@ -466,15 +469,12 @@ Serial.println(configAdress);
 
   /***** Quick Mute *****/
   if (digitalRead(MAIN_BUTTON) == LOW) {
-    if (storage.volume > 0) {
-      //dfplayer.setVolume(0);
-      //Serial.println("Muted");
-    }
-    else {
+    dfplayer.setVolume(0);
+    //Serial.println("Muted");
+  }
+  else {
       dfplayer.setVolume(storage.volume);
       //Serial.println("Unmuted");
-    }
-    //    EEPROM.write(37, storage.volume); // comment this line to make mute setting temporary
   }
   /****** INIT SABER STATE VARIABLE *****/
   SaberState = S_STANDBY;
@@ -540,7 +540,8 @@ void loop() {
       // Light up the blade
       pixelblade_KillKey_Disable();
       #ifdef CROSSGUARDSABER
-        lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor, 11, 60);
+        lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor, MAINBLADE_OFFSET, MAINBLADE_OFFSET+MAINBLADE_LENGTH);
+        mainignition_done=true;
       #else // single blade or saber staff
         lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor);
       #endif
@@ -548,25 +549,27 @@ void loop() {
       sndSuppress = millis()-soundFont.getPowerOnTime();
       sndSuppress2 = millis();
 
+    #ifdef CROSSGUARDSABER
+      
+      // ignite the crossguard after the defined wat time or latest when a new hum shall be relaunched
+      while (millis()-sndSuppress2<STAGGERED_IGNITION_DELAY and millis()-sndSuppress2<HUM_RELAUNCH) {
+        lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates, MAINBLADE_OFFSET, MAINBLADE_OFFSET+MAINBLADE_LENGTH);
+      }        
+        SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
+        lightIgnition(ledPins, CLASH_SUPRESS, storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor, CROSSGUARD_OFFSET, CROSSGUARD_LENGTH);
+        sndSuppress2=millis();
+        mainignition_done=false; // reset flag for next power up
+    #endif
+    
       // Get the initial position of the motion detector
-      motionEngine();
+      //motionEngine();
       ActionModeSubStates = AS_HUM;
-      //ignition = true;
-
 #if defined ACCENT_LED
       // turns accent LED On
       accentLEDControl(AL_ON);
       //digitalWrite(ACCENT_LED, HIGH);
 #endif
-    }
-    #ifdef CROSSGUARDSABER
-      if (millis()-sndSuppress2>STAGGERED_IGNITION_DELAY) {
-        SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
-        lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor, 0, 10);
-        sndSuppress2=millis();
-      }
-    #endif
-
+  }
     // ************************* blade movement detection ************************************
     //Let's get our values !
     motionEngine();
@@ -1058,6 +1061,9 @@ void loop() {
       ActionModeSubStates = AS_HUM;
       changeMenu = false;
       modification = 0;
+      #ifdef CROSSGUARDSABER
+      mainignition_done=false;
+      #endif
 #if defined LS_INFO
       Serial.println(F("END ACTION"));
 #endif
@@ -1416,6 +1422,9 @@ void SleepModeEntry() {
   for (uint8_t i = 0; i < sizeof(ledPins); i++) {
     digitalWrite(ledPins[i], LOW);
   }
+  // pin change interrupt masks (see below list)
+  //PCMSK2 |= bit (PCINT20);   // pin 4 Aux button
+  PCMSK0 |= bit (PCINT4);    // pin 12 Main button
   mpu.setSleepEnabled(true);
   Disable_MP3(true);
   mpu.setSleepEnabled(true); // included as dummy, for an unknown reason if it's not here and the dfplayer.sleep() is commented out, sound is disabled

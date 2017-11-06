@@ -121,8 +121,10 @@
   
   #ifdef CROSSGUARDSABER
     // define how many pixels are used for the crossguard and how many for the main blade
-    #define CG_STRIPE 10 // cross guard stripe length
-    #define MN_STRIPE 50 // main blade stripe length
+    #define CROSSGUARD_LENGTH 10 // cross guard stripe length
+    #define MAINBLADE_LENGTH 50 // main blade stripe length
+    #define CROSSGUARD_OFFSET 0
+    #define MAINBLADE_OFFSET 10
     #define STAGGERED_IGNITION_DELAY 1000
   #endif
 

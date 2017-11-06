@@ -87,7 +87,7 @@ extern bool fireblade;
 // ====================================================================================
 
 void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonActionType, int8_t incrementSign=1){
-    if (ConfigModeSubStates == CS_VOLUME) {
+    if (ConfigModeSubStates == CS_VOLUME and ButtonActionType==SINGLE_CLICK) {
       confParseValue(storage.volume, 5, 30, 1*incrementSign);
       storage.volume = value;
       BladeMeter(ledPins, value*100/30);

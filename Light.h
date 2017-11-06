@@ -38,10 +38,10 @@ void BladeMeter (uint8_t ledPins[], int meterLevel);
 void lightOn(uint8_t ledPins[], int8_t segment = -1, cRGB color={0,0,0}, int8_t StartPixel=-1, int8_t StopPixel=-1);
 void lightOff();
 void getColor(cRGB color={0,0,0}); //getColor
-void RampBlade(uint16_t RampDuration, bool DirectionUpDown, uint8_t startpixel=0, uint8_t stoppixel=NUMPIXELS);
-void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0,0,0}, uint8_t startpixel=0, uint8_t stoppixel=NUMPIXELS);
+void RampBlade(uint16_t RampDuration, bool DirectionUpDown, int8_t StartPixel=-1, int8_t StopPixel=-1);
+void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0,0,0}, int8_t startpixel=-1, int8_t stoppixel=-1);
 void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0,0});
-void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincolor={0,0,0}, cRGB clashcolor={0,0,0},uint8_t AState=0);
+void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincolor={0,0,0}, cRGB clashcolor={0,0,0},uint8_t AState=0, int8_t StartPixel=-1, int8_t StopPixel=-1);
 void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_BRIGHTNESS, bool Saturate=false);
 void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB SndFnt_MainColor={0,0,0});
 void lightClashEffect(uint8_t ledPins[], cRGB color={0,0,0});
