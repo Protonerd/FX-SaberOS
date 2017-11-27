@@ -6,3 +6,5 @@ System code for Arduino based Lightsaber replicas for DIYino family boards and A
 This repository is currently in development.  The currently posted builds should be fully functional, but are undergoing rapid changes and there will likely be big changes in the versions prior to the official release. Please check back soon!
 
 Installation and configuration instructions are available in the Wiki https://github.com/Protonerd/FX-SaberOS/wiki
+
+Please share your projects and join the discussion with our Facebook group at https://www.facebook.com/groups/FXSaberOS/
