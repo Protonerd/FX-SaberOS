@@ -26,9 +26,6 @@
 #define CLASH_THRESHOLD 10 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
 /************************************/
 
-#if defined STAR_LED
-#endif
-
 #if defined LEDSTRINGS
   #define CONFIG_VERSION     "L01"
 #endif
@@ -38,12 +35,22 @@
 #endif
 #if defined PIXELBLADE
   #define CONFIG_VERSION     "L03"
-  //#define FIREBLADE
+  static const uint8_t rgbFactor = 255;
+#endif
+#if defined ADF_PIXIE_BLADE
+  #define CONFIG_VERSION     "L05"
   static const uint8_t rgbFactor = 255;
 #endif
 
+/*
+ * SOFTWARE SWITCHES FOR DFPLAYER CHISET
+ *************************************/
 
-
+#ifdef ADF_PIXIE_BLADE
+  #define OLD_DPFPLAYER_LIB
+  #include "Adafruit_Pixie.h"
+  #include <SoftwareSerial.h>
+#endif
 /**********END of blade type hardware settings **************************/
 
 /*
@@ -108,8 +115,22 @@
  *************************************/
 #define DEEP_SLEEP
 #if defined DEEP_SLEEP
-  #define SLEEP_TIMER      20000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
+  #define SLEEPYTIME      60000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
+  #include <avr/sleep.h>
+  #include <avr/power.h>
 #endif  // DEEP_SLEEP
+
+
+/* COLOR CHANGE OPTIONS
+ *  If you want to use the advanced Gravity Color method developed for FX-SaberOS
+ *  leave the GRAVITY_COLOR compile directive defined.
+ *  If instead you would like to work with pre-set color profiles (15 different, pre-defined colors)
+ *  comment out the line with GRAVITY_COLOR, which will define COLOR_PROFILE to be used.
+ *************************************/
+#define GRAVITY_COLOR
+#ifndef GRAVITY_COLOR
+  #define COLOR_PROFILE
+#endif
 
 /*
  * Enable Jukebox, an integrated MP3/WAV player which can play songs/music files

@@ -47,7 +47,7 @@ extern uint8_t ledPins[];
 extern cRGB currentColor;
 //extern uint8_t currentColor[4]; //0:Red 1:Green 2:Blue 3:ColorID
 #endif
-#if defined PIXELBLADE
+#if defined PIXELBLADE or defined ADF_PIXIE_BLADE
 extern uint8_t ledPins[];
 extern cRGB color;
 extern cRGB currentColor;
@@ -105,10 +105,13 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       //Serial.print("soundfont   "); Serial.print(storage.soundFont); Serial.print("  Offset:   ");Serial.println(soundFont.getMenu((storage.soundFont)*NR_FILE_SF));
       delay(150);    
     }
-    #if defined(PIXELBLADE) or defined(STAR_LED)
+    #if defined PIXELBLADE or defined STAR_LED or defined ADF_PIXIE_BLADE
     else if (ConfigModeSubStates==CS_MAINCOLOR) {
-      //confParseValue(storage.sndProfile[storage.soundFont].mainColor, 0, 100 - 1, 1);
-      ColorMixing(storage.sndProfile[storage.soundFont].mainColor,modification,MAX_BRIGHTNESS, SaturateColor);
+      #ifdef GRAVITY_COLOR
+        ColorMixing(storage.sndProfile[storage.soundFont].mainColor,modification,MAX_BRIGHTNESS, SaturateColor);
+      #else if COLOR_PROFILE
+
+      #endif
       storage.sndProfile[storage.soundFont].mainColor.r=currentColor.r;
       storage.sndProfile[storage.soundFont].mainColor.g=currentColor.g;
       storage.sndProfile[storage.soundFont].mainColor.b=currentColor.b;
@@ -139,6 +142,9 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       #endif
       #ifdef STAR_LED
         confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 2, 1*incrementSign); // max number of flicker types for STAR_LED currently 3
+      #endif
+      #ifdef ADF_PIXIE_BLADE
+        confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 0, 1*incrementSign); // max number of flicker types for Adafruit Pixie currently 1
       #endif
       #ifdef PIXELBLADE
         confParseValue(storage.sndProfile[storage.soundFont].flickerType, 0, 4, 1*incrementSign); // max number of flicker types for PIXELBLADE currently 5

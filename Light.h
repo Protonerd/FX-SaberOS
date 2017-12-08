@@ -28,6 +28,7 @@ struct softPWM {
 #endif
 #endif
 
+
 // ====================================================================================
 // ===              	    			LED FUNCTIONS		                		===
 // ====================================================================================
@@ -54,6 +55,10 @@ void pixelblade_KillKey_Disable();
 
 void FoCOn (uint8_t pin);
 void FoCOff (uint8_t pin);
+
+#ifdef ADF_PIXIE_BLADE
+  void InitAdafruitPixie(uint8_t ledPins[]);
+#endif
 
 #ifdef PIXELBLADE
 //#ifdef FIREBLADE

@@ -1,7 +1,7 @@
 /*
  * Light.cpp
  *
- * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
+ * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)lightClashEffect
  * Source : 	https://github.com/neskweek/LightSaberOS
  */
 #include "Light.h"
@@ -75,6 +75,7 @@ static byte heat[NUMPIXELS];
 #define PIXELSTEP 5// how many pixel to treat as a group to save on processing capability
 #endif  // PIXELBLADE
 
+
 /* ***************** UNIFIED LIGHT FUNCTIONS *********************/
 
 #define I_BEGINNEXTSEGMENT 50
@@ -91,10 +92,20 @@ static long lastFlicker = millis();
   extern WS2812 pixels;
 #endif
 
-#if defined STAR_LED or defined PIXELBLADE
+#if defined STAR_LED or defined PIXELBLADE or defined ADF_PIXIE_BLADE
 extern cRGB currentColor;
 #endif
 
+#ifdef ADF_PIXIE_BLADE
+  SoftwareSerial pixieSerial(-1, PIXIEPIN);
+  Adafruit_Pixie strip = Adafruit_Pixie(NUMPIXELS, &pixieSerial);
+#endif
+
+#ifdef COLOR_PROFILE
+// define an array for the 15 color profiles
+cRGB colorProfiles[15];
+//colorProfiles[0].r=255;
+#endif
 // ====================================================================================
 // ===              	    			LED FUNCTIONS		                		===
 // ====================================================================================
@@ -116,6 +127,13 @@ void lightOn(uint8_t ledPins[], int8_t segment = -1, cRGB color={0,0,0}, int8_t 
       analogWrite(ledPins[0], color.r); // RED
       analogWrite(ledPins[1], color.g); // GREEN
       analogWrite(ledPins[2], color.b); // BLUE
+  #endif
+
+  #ifdef ADF_PIXIE_BLADE
+    for(uint8_t i=0; i< NUMPIXELS; i++) {
+      strip.setPixelColor(i, color.r, color.g, color.b);
+    }
+    strip.show();
   #endif
   
   #ifdef PIXELBLADE
@@ -151,6 +169,13 @@ void lightOff() {
     digitalWrite(LED_GREEN, LOW); // GREEN
     digitalWrite(LED_BLUE, LOW); // BLUE
   #endif
+
+  #ifdef ADF_PIXIE_BLADE
+    for(uint8_t i=0; i< NUMPIXELS; i++) {
+      strip.setPixelColor(i, 0, 0, 0);
+    }
+    strip.show();
+  #endif
   
   #ifdef PIXELBLADE
     // shut Off
@@ -177,6 +202,12 @@ void getColor(cRGB color={0,0,0}) {
     currentColor.b = color.b;
   #endif
   
+  #ifdef ADF_PIXIE_BLADE
+    currentColor.r = color.r;
+    currentColor.g = color.g;
+    currentColor.b = color.b;
+  #endif
+    
   #ifdef PIXELBLADE
     currentColor.r = color.r;
     currentColor.g = color.g;
@@ -190,6 +221,10 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, int8_t StartPixel=-1
   #endif
   
   #if defined STAR_LED
+
+  #endif
+
+  #ifdef ADF_PIXIE_BLADE
 
   #endif
   
@@ -305,11 +340,23 @@ void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0
   
   #if defined STAR_LED
     // Fade in to Maximum brightness
-    for (uint8_t fadeIn = MAX_BRIGHTNESS-50; fadeIn > 0; fadeIn--) {
-      analogWrite(LED_RED, (MAX_BRIGHTNESS / fadeIn) * color.r / rgbFactor); // RED
-      analogWrite(LED_GREEN, (MAX_BRIGHTNESS / fadeIn) * color.g / rgbFactor); // GREEN
-      analogWrite(LED_BLUE, (MAX_BRIGHTNESS / fadeIn) * color.b / rgbFactor); // BLUE
-      delay(time / (MAX_BRIGHTNESS-50));
+     for (uint8_t fadeIn = 0; fadeIn < 255; fadeIn++) {
+      analogWrite(LED_RED, color.r * fadeIn / 255); // RED
+      analogWrite(LED_GREEN, color.g * fadeIn / 255); // GREEN
+      analogWrite(LED_BLUE, color.b * fadeIn / 255); // BLUE
+      delay(time / 255);
+    }
+  #endif
+
+  #ifdef ADF_PIXIE_BLADE
+ 
+  // Fade in to Maximum brightness
+    for (uint8_t fadeIn = 0; fadeIn < 255; fadeIn++) {
+      for(uint8_t i=0; i< NUMPIXELS; i++) {        
+        strip.setPixelColor(i, color.r * fadeIn / 255, color.g * fadeIn / 255, color.b * fadeIn / 255);
+      }
+    strip.show();
+    delay(time / 255);
     }
   #endif
   
@@ -374,14 +421,25 @@ void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0
   #endif
   
   #if defined STAR_LED
-    // Fade out
-    for (uint8_t fadeOut = 1; fadeOut < MAX_BRIGHTNESS-50; fadeOut++) {
-      analogWrite(LED_RED, (MAX_BRIGHTNESS / fadeOut) * color.r / rgbFactor); // RED
-      analogWrite(LED_GREEN, (MAX_BRIGHTNESS / fadeOut) * color.g / rgbFactor); // GREEN
-      analogWrite(LED_BLUE, (MAX_BRIGHTNESS / fadeOut) * color.b / rgbFactor); // BLUE
-      delay(time / (MAX_BRIGHTNESS-50));
+    // Fade in to Maximum brightness
+     for (uint8_t fadeIn = 255; fadeIn > 0; fadeIn--) {
+      analogWrite(LED_RED, color.r * fadeIn / 255); // RED
+      analogWrite(LED_GREEN, color.g * fadeIn / 255); // GREEN
+      analogWrite(LED_BLUE, color.b * fadeIn / 255); // BLUE
+      delay(time / 255);
     }
-    lightOff();
+  #endif
+
+  #ifdef ADF_PIXIE_BLADE
+ 
+  // Fade in to Maximum brightness
+    for (uint8_t fadeIn = 255; fadeIn > 0; fadeIn--) {
+      for(uint8_t i=0; i< NUMPIXELS; i++) {        
+        strip.setPixelColor(i, color.r * fadeIn / 255, color.g * fadeIn / 255, color.b * fadeIn / 255);
+      }
+    strip.show();
+    delay(time / 255);
+    }
   #endif
   
   #ifdef PIXELBLADE
@@ -538,6 +596,15 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       break;      
   }
   #endif
+
+  #ifdef ADF_PIXIE_BLADE
+      for(uint8_t i=0; i< NUMPIXELS; i++) {
+        Serial.print("\t");Serial.print(brightness);Serial.print("\t");Serial.print(maincolor.g);Serial.print("\t");Serial.println((brightness * maincolor.r) / rgbFactor);
+        //strip.setPixelColor(i, ((brightness * maincolor.r) / rgbFactor), ((brightness * maincolor.r) / rgbFactor), ((brightness * maincolor.r) / rgbFactor));//maincolor.r, maincolor.g, maincolor.b);
+        strip.setPixelColor(i, maincolor.r,maincolor.g, maincolor.b);//maincolor.r, maincolor.g, maincolor.b);
+      }
+      strip.show();
+  #endif
   
   #ifdef PIXELBLADE
       if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe    // neopixel ramp code from jbkuma
@@ -665,7 +732,7 @@ void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_
   #endif
   
 
-  #if defined(PIXELBLADE) or defined(STAR_LED)
+  #if defined PIXELBLADE or defined STAR_LED or defined ADF_PIXIE_BLADE
     cRGB mixedColor;
     mixedColor.r=colorID.r;
     mixedColor.g=colorID.g;
@@ -737,6 +804,12 @@ void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_
             analogWrite(LED_GREEN, currentColor.g); // GREEN
             analogWrite(LED_BLUE, currentColor.b); // BLUE  
           #endif
+          #ifdef ADF_PIXIE_BLADE
+            for(uint8_t i=0; i< NUMPIXELS; i++) {
+              strip.setPixelColor(i, currentColor.r, currentColor.g, currentColor.b);
+            }
+            strip.show();
+          #endif
   #endif
 } // ColorMixing
 
@@ -749,6 +822,13 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
     lightOn(ledPins, -1, currentColor);  
   #endif
   
+  #ifdef ADF_PIXIE_BLADE
+    for(uint8_t i=0; i< NUMPIXELS; i++) {
+      strip.setPixelColor(i, currentColor.r, currentColor.g, currentColor.b);
+    }
+    strip.show();
+  #endif
+            
   #ifdef PIXELBLADE
     cRGB blastcolor;
     cRGB fadecolor;
@@ -762,6 +842,23 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
         heat[pixel-i] = 0; // white hot fire burst along the whole blade
       }
       else {
+        uint8_t j=i+pixel;
+        if (j==pixel or j==pixel+2*range) { // 2 pixels at the edges shall be shut down
+          fadecolor.r = 0;
+          fadecolor.g = 0;
+          fadecolor.b = 0;
+          pixels.set_crgb_at(j, fadecolor);
+        }
+        else if (j==pixel+range+1) { // middle pixel full white
+          fadecolor.r = MAX_BRIGHTNESS;
+          fadecolor.g = MAX_BRIGHTNESS;
+          fadecolor.b = MAX_BRIGHTNESS;
+          pixels.set_crgb_at(j, fadecolor);
+        }
+        else { // rest of the pixels between middle and edge
+          pixels.set_crgb_at(j, blastcolor);
+        }
+        /* 
         for (uint8_t j = 0; j <=range; j++) {
           if (j==i) {
             pixels.set_crgb_at(pixel-j, blastcolor);
@@ -771,7 +868,7 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
             pixels.set_crgb_at(pixel-j, currentColor);
             pixels.set_crgb_at(pixel+j, currentColor);
           }
-        }
+        }*/
         pixels.sync();
         if (not fireblade) {
           delay(BLASTER_FX_DURATION/(2*range));  // blast deflect should last for ~500ms
@@ -782,7 +879,7 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
 } // lightBlasterEffect
 
 void pixelblade_KillKey_Enable() {
-  #ifdef PIXELBLADE  
+  #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
       digitalWrite(3, LOW);
       digitalWrite(5, LOW);
@@ -790,12 +887,16 @@ void pixelblade_KillKey_Enable() {
       digitalWrite(9, LOW);
       digitalWrite(10, LOW);
       digitalWrite(11, LOW);
-      digitalWrite(DATA_PIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
+      #ifdef PIXELBLADE
+        digitalWrite(DATA_PIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
+      #else if ADF_PIXIE_BLADE
+        digitalWrite(PIXIEPIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
+      #endif
   #endif      
 }
 
 void pixelblade_KillKey_Disable() {
-  #ifdef PIXELBLADE  
+  #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
       digitalWrite(3, HIGH);
       digitalWrite(5, HIGH);
@@ -817,6 +918,11 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
   #if defined STAR_LED
     getColor(color);
     lightOn(ledPins, -1, currentColor);
+  #endif
+
+  #ifdef ADF_PIXIE_BLADE
+    //getColor(storage.sndProfile[storage.soundFont].clashColor);
+    lightOn(ledPins, -1, color);
   #endif
   
   #if defined PIXELBLADE
@@ -907,10 +1013,43 @@ void BladeMeter (uint8_t ledPins[], int meterLevel) {  //expects input of 0-100
 #endif
 }
 
+#ifdef ADF_PIXIE_BLADE
+void InitAdafruitPixie(uint8_t ledPins[]) {
+  //pixieSerial.setSerial(-1, PIXIEPIN);
+  pixieSerial.begin(115200); // Pixie REQUIRES this baud rate
+  strip.setBrightness(MAX_BRIGHTNESS);  // Adjust as necessary to avoid blinding
+  /*pixelblade_KillKey_Disable();
+  Serial.println("Red!");
+  for(uint8_t i=0; i< NUMPIXELS; i++)
+    strip.setPixelColor(i, 255, 0, 0);
+  strip.show();
+  delay(300);
 
+  Serial.println("Green!");
+  for(uint8_t i=0; i< NUMPIXELS; i++)
+    strip.setPixelColor(i, 0, 255, 0);
+  strip.show();
+  delay(300);
 
-
-
+  Serial.println("Blue!");
+  for(uint8_t i=0; i< NUMPIXELS; i++)
+    strip.setPixelColor(i, 0, 0, 255);
+  strip.show();
+  delay(300);
+  currentColor.r = 0;
+  currentColor.g = 200;
+  currentColor.b = 255;
+  lightOn(ledPins, -1, currentColor);
+  delay(300);
+    for(uint8_t i=0; i< NUMPIXELS; i++)
+    strip.setPixelColor(i, 255, 0, 0);
+  strip.show();
+  delay(1000);
+  lightOff();
+  getColor(storage.sndProfile[storage.soundFont].mainColor);
+  pixelblade_KillKey_Enable();*/
+}
+#endif
 
 
 
@@ -1204,7 +1343,30 @@ uint8_t scale8_video( uint8_t i, uint8_t scale)
 }*/
 #endif
 
-
+#ifdef COLOR_PROFILE
+cRGB setColorProfile(cRGB currentcolor) {
+// Red  
+colorProfiles[0].r=255;
+colorProfiles[0].g=0;
+colorProfiles[0].b=0;
+// Green  
+colorProfiles[1].r=0;
+colorProfiles[1].g=255;
+colorProfiles[1].b=0;
+// Blue  
+colorProfiles[2].r=0;
+colorProfiles[2].g=0;
+colorProfiles[2].b=255;
+// Orange  
+colorProfiles[3].r=255;
+colorProfiles[3].g=100;
+colorProfiles[3].b=0;
+// Cyan  
+colorProfiles[4].r=0;
+colorProfiles[4].g=100;
+colorProfiles[4].b=255;
+}
+#endif
 #if defined ACCENT_LED
 
 void accentLEDControl( AccentLedAction_En AccentLedAction) {

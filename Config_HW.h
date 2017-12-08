@@ -21,8 +21,8 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-#define DIYINO_PRIME
-//#define DIYINO_STARDUST
+//#define DIYINO_PRIME
+#define DIYINO_STARDUST
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -36,7 +36,7 @@
 // If your saber has only a single button to interact with the electronics, uncomment the next line
 // in case you have 2 buttons (referred to as main and aux buttons) leave this line commented out
 
-//#define SINGLEBUTTON
+#define SINGLEBUTTON
  
 #ifdef DIYINO_PRIME 
   #define MAIN_BUTTON     12
@@ -60,8 +60,9 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-//#define STAR_LED
-#define PIXELBLADE
+#define STAR_LED
+//#define PIXELBLADE
+//#define ADF_PIXIE_BLADE
 
 /************************************/
 /*
@@ -111,13 +112,27 @@
     #define LED_BLUE      9
   #endif
 
-  // How many leds in one strip?
-  #define NUMPIXELS 60  // can go up to 120, could lead to memory overflow if further increased, causing instability
-
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+#include <Wire.h>
+#endif
+  #if defined LEDSTRINGS or defined STAR_LED
+    #define NUMPIXELS 0
+  #endif
   
-  // For led chips like NEOPIXELs, which have a data line, ground, and power, you just
-  // need to define DATA_PIN.
-  #define DATA_PIN       13 // D13
+  #ifdef PIXELBLADE
+    // How many leds in one strip?
+    #define NUMPIXELS 115  // can go up to 120, could lead to memory overflow if further increased, causing instability
+    // For led chips like NEOPIXELs, which have a data line, ground, and power, you just
+    // need to define DATA_PIN.
+    #define DATA_PIN       13 // D13
+  #endif
+
+  #ifdef ADF_PIXIE_BLADE
+    #define NUMPIXELS 1
+    #define PIXIEPIN  13 // Pin number for SoftwareSerial output
+  #endif
+  
+
   
   #ifdef CROSSGUARDSABER
     // define how many pixels are used for the crossguard and how many for the main blade
@@ -153,17 +168,14 @@
  * Enable/disable management of
  * a button accent led
  *************************************/
-#define ACCENT_LED  14 //A0
-
-//#define MULTICOLOR_ACCENT_LED
-#if defined MULTICOLOR_ACCENT_LED
-#define RED_ACCENT_LED  16 //A2
-#define GREEN_ACCENT_LED  17 //A3
-#define BLUE_ACCENT_LED  A7  //.... A7 is input only ...
+#ifdef DIYINO_PRIME
+  #define ACCENT_LED 14 //A0
+#else if DIYINO_STARDUST
+  #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
 #endif
-
-
-
+/*
+ * MP3 chips YX5200 or YX6300 Tx and Rx ins, as well as the ADC pins connected to the SPK terminals for AudioTracker
+ */
 #define DFPLAYER_RX      8
 #define DFPLAYER_TX     7
 #define SPK1        20 //A6
@@ -171,8 +183,6 @@
 
 
 
-
-#define BUTTONLEDPIN 16 //A2
 
 #define BATTERY_CHECK // comment to disable
 #ifdef BATTERY_CHECK
