@@ -1,0 +1,18 @@
+#######################################
+# Syntax Coloring Map For Adafruit_Pixie
+####################################### 
+# Class
+#######################################
+
+Adafruit_Pixie	KEYWORD1
+
+#######################################
+# Methods and Functions 
+#######################################	
+
+setPixelColor	KEYWORD2
+setPin			KEYWORD2
+setBrightness	KEYWORD2
+numPixels		KEYWORD2
+getPixelColor	KEYWORD2
+Color			KEYWORD2
