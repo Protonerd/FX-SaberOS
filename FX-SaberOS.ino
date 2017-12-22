@@ -417,6 +417,7 @@ Serial.println(configAdress);
   /***** BUTTONS INITIALISATION  *****/
 
   // link the Main button functions.
+  pinMode(MAIN_BUTTON, INPUT_PULLUP);
   mainButton.setClickTicks(CLICK);
   mainButton.setPressTicks(PRESS_CONFIG);
   mainButton.attachClick(mainClick);
@@ -427,6 +428,7 @@ Serial.println(configAdress);
 
 #ifndef SINGLEBUTTON
   // link the Lockup button functions.
+  pinMode(AUX_BUTTON, INPUT_PULLUP);
   lockupButton.setClickTicks(CLICK);
   lockupButton.setPressTicks(PRESS_CONFIG);
   lockupButton.attachClick(lockupClick);

@@ -41,7 +41,7 @@ extern struct StoreStruct {
 }storage;
 
 extern SoundFont soundFont;
-
+extern uint8_t ledPins[];
 # if defined ACCENT_LED
   unsigned long lastAccent = millis();
 #endif
@@ -881,12 +881,20 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
 void pixelblade_KillKey_Enable() {
   #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
-      digitalWrite(3, LOW);
-      digitalWrite(5, LOW);
-      digitalWrite(6, LOW);
-      digitalWrite(9, LOW);
-      digitalWrite(10, LOW);
-      digitalWrite(11, LOW);
+    #ifdef DIYINO_STARDUST
+    for (uint8_t j = 0; j < 3; j++) {
+    #endif
+    #ifdef DIYINO_PRIME  
+    for (uint8_t j = 0; j < 6; j++) {
+    #endif
+      digitalWrite(ledPins[j], LOW);
+    }
+      //digitalWrite(3, LOW);
+      //digitalWrite(5, LOW);
+      //digitalWrite(6, LOW);
+      //digitalWrite(9, LOW);
+      //digitalWrite(10, LOW);
+      //digitalWrite(11, LOW);
       #ifdef PIXELBLADE
         digitalWrite(DATA_PIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
       #else if ADF_PIXIE_BLADE
@@ -898,12 +906,20 @@ void pixelblade_KillKey_Enable() {
 void pixelblade_KillKey_Disable() {
   #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
-      digitalWrite(3, HIGH);
-      digitalWrite(5, HIGH);
-      digitalWrite(6, HIGH);
-      digitalWrite(9, HIGH);
-      digitalWrite(10, HIGH);
-      digitalWrite(11, HIGH);
+    #ifdef DIYINO_STARDUST
+    for (uint8_t j = 0; j < 3; j++) {
+    #endif
+    #ifdef DIYINO_PRIME  
+    for (uint8_t j = 0; j < 6; j++) {
+    #endif
+      digitalWrite(ledPins[j], HIGH);
+    }
+      //digitalWrite(3, HIGH);
+      //digitalWrite(5, HIGH);
+      //digitalWrite(6, HIGH);
+      //digitalWrite(9, HIGH);
+      //digitalWrite(10, HIGH);
+      //digitalWrite(11, HIGH);
   #endif
 }
 
