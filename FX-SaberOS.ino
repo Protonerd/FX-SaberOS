@@ -40,6 +40,7 @@
 SoundFont soundFont;
 unsigned long sndSuppress = millis();
 unsigned long sndSuppress2 = millis();
+unsigned long clashSndSuppress = millis();
 #ifdef DEEP_SLEEP
   unsigned long sleepTimer = millis();
 #endif
@@ -67,6 +68,9 @@ extern ConfigModeSubStatesEnum PrevConfigModeSubStates;
  * Motion detection Variables
 */
 MPU6050 mpu;
+#ifdef CLASH_DET_MPU_INT
+  I2Cdev i2ccomm;
+#endif
 // MPU control/status vars
 volatile bool mpuInterrupt = false; // indicates whether MPU interrupt pin has gone high
 bool dmpReady = false;  // set true if DMP init was successful
@@ -354,6 +358,7 @@ Serial.println(configAdress);
 #endif
   }
 
+  
   // configure the motion interrupt for clash recognition
   // INT_PIN_CFG register
   // in the working code of MPU6050_DMP all bits of the INT_PIN_CFG are false (0)
@@ -368,8 +373,27 @@ Serial.println(configAdress);
   //  mpu.setMotionDetectionThreshold(10); // 1mg/LSB
   mpu.setMotionDetectionThreshold(CLASH_THRESHOLD); // 1mg/LSB
   mpu.setMotionDetectionDuration(2); // number of consecutive samples above threshold to trigger int
+  Serial.println("checkpoint 0");
+  #ifdef CLASH_DET_MPU_INT
+      // configure Interrupt with:
+    // int level active low
+    // int driver open drain
+    // interrupt latched until read out (not 50us pulse)
+    i2ccomm.writeByte(MPU6050_DEFAULT_ADDRESS, 0x37, 0xF0);
+    // enable only Motion Interrut
+    i2ccomm.writeByte(MPU6050_DEFAULT_ADDRESS, 0x38, 0x40);
+  #endif
   mpuIntStatus = mpu.getIntStatus();
 
+
+  #ifdef CLASH_DET_MPU_INT
+    // define D2 (interrupt0) as input
+    pinMode(2, INPUT_PULLUP);
+    // enable Arduino interrupt detection
+    Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+    // define Interrupt Service for aux. switch
+    attachInterrupt(0, ISR_MPUInterrupt, FALLING); // int.0 is the pin2 on the Atmega328P
+  #endif
   /***** MP6050 MOTION DETECTOR INITIALISATION  *****/
 
   /***** LED SEGMENT INITIALISATION  *****/
@@ -580,51 +604,33 @@ void loop() {
        such a deceleration instantenously, which is only feasible
        using the motion interrupt feature of the MPU6050.
     */
-    if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP) {
+    #ifdef CLASH_DET_MPU_POLL
+      if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP) {
+        FX_Clash();
+      }
+    #endif // CLASH_DET_MPU_POLL
 
-#if defined LS_CLASH_DEBUG
-      Serial.print(F("CLASH\tmpuIntStatus="));
-      Serial.println(mpuIntStatus);
-#endif
-      if (lockuponclash) {
-        //if (ActionModeSubStates==AS_PREBLADELOCKUP or lockuponclash) {
-        //Lockup Start
-        ActionModeSubStates = AS_BLADELOCKUP;
-        if (soundFont.getLockup((storage.soundFont)*NR_FILE_SF)) {
-          LoopPlay_Sound(soundFont.getLockup((storage.soundFont)*NR_FILE_SF));
-        }
-      }
-      else { // ordinary clash
-        if (millis() - sndSuppress >= CLASH_SUPRESS) {
-          SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
-          sndSuppress = millis();
-          sndSuppress2 = millis();
-          /*
-             THIS IS A CLASH  !
-          */
-          ActionModeSubStates = AS_CLASH;
-          lightClashEffect(ledPins, storage.sndProfile[storage.soundFont].clashColor);
-          if (!fireblade) {
-            delay(CLASH_FX_DURATION);  // clash duration
-          }
-        }
-      }
-    }
     /*
        SIMPLE BLADE MOVEMENT DETECTION FOR MOTION  TRIGGERED BLASTER FEDLECT
        We detect swings as hilt's orientation change
        since IMUs sucks at determining relative position in space
     */
     // movement of the hilt while blaster move deflect is activated can trigger a blaster deflect
+    #ifdef CLASH_DET_MPU_POLL
     else if ((ActionModeSubStates == AS_BLASTERDEFLECTPRESS or (ActionModeSubStates == AS_BLASTERDEFLECTMOTION and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity // and it has suffisent power on a certain axis
+    #endif
+    #ifdef CLASH_DET_MPU_INT
+    if ((ActionModeSubStates == AS_BLASTERDEFLECTPRESS or (ActionModeSubStates == AS_BLASTERDEFLECTMOTION and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity // and it has suffisent power on a certain axis
+    #endif
               or abs(curDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
               or abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity))) and (millis() - sndSuppress >= BLASTERBLOCK_SUPRESS)) {
 
       if (soundFont.getBlaster((storage.soundFont)*NR_FILE_SF)) {
         SinglePlay_Sound(soundFont.getBlaster((storage.soundFont)*NR_FILE_SF));
 #if defined LEDSTRINGS
-        blasterPin = random(1,5); //momentary shut off one led segment
-        analogWrite(ledPins[blasterPin], LOW);
+        lightBlasterEffect(ledPins, 0, 0);
+        //blasterPin = random(1,5); //momentary shut off one led segment
+        //analogWrite(ledPins[blasterPin], LOW);
 #endif
 #if defined STAR_LED
         getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
@@ -838,6 +844,7 @@ void loop() {
         Serial.print(F("\tz="));
         Serial.println(curDeltAccel.z);
 #endif
+       #ifdef CLASH_DET_MPU_POLL
         motionEngine();
         if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP) {
           SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
@@ -853,6 +860,7 @@ void loop() {
           }       
         }
         else {
+       #endif // CLASH_DET_MPU_POLL
           ActionModeSubStates = AS_SWING;
           SinglePlay_Sound(soundFont.getSwing((storage.soundFont)*NR_FILE_SF));
           /* NORMAL SWING */
@@ -866,7 +874,9 @@ void loop() {
           if (millis() - sndSuppress2 > SWING_SUPPRESS) {
             sndSuppress2 = millis();
           }
+      #ifdef CLASH_DET_MPU_POLL
       }
+      #endif // CLASH_DET_MPU_POLL
       }
     }
     else { // simply flicker
@@ -1316,6 +1326,45 @@ uint8_t GravityVector() {
   //Serial.println(Orientation);
   return Orientation;
 }
+
+void FX_Clash() {
+        #if defined LS_CLASH_DEBUG
+              Serial.print(F("CLASH\tmpuIntStatus="));
+              Serial.println(mpuIntStatus);
+        #endif
+        if (lockuponclash) {
+          //if (ActionModeSubStates==AS_PREBLADELOCKUP or lockuponclash) {
+          //Lockup Start
+          ActionModeSubStates = AS_BLADELOCKUP;
+          if (soundFont.getLockup((storage.soundFont)*NR_FILE_SF)) {
+            LoopPlay_Sound(soundFont.getLockup((storage.soundFont)*NR_FILE_SF));
+          }
+        }
+        else { // ordinary clash
+          if (millis() - clashSndSuppress >= CLASH_SUPRESS) {
+            SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
+            /*
+               THIS IS A CLASH  !
+            */
+            ActionModeSubStates = AS_CLASH;
+            lightClashEffect(ledPins, storage.sndProfile[storage.soundFont].clashColor);
+            if (!fireblade) {
+              //delay(CLASH_FX_DURATION);  // clash duration
+              delayMicroseconds(CLASH_FX_DURATION*1000);
+            }
+            sndSuppress = millis();
+            sndSuppress2 = millis();
+            clashSndSuppress=millis();           
+          }
+        }
+}
+#ifdef CLASH_DET_MPU_INT
+  void ISR_MPUInterrupt() {
+      if (SaberState==S_SABERON) {
+        FX_Clash();
+      }
+  }
+#endif
 
 //#if defined LS_MOTION_DEBUG
 //inline void printAccel(int16_t ax, int16_t ay, int16_t az) {

@@ -21,8 +21,8 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-//#define DIYINO_PRIME
-#define DIYINO_STARDUST
+#define DIYINO_PRIME
+//#define DIYINO_STARDUST
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -36,7 +36,7 @@
 // If your saber has only a single button to interact with the electronics, uncomment the next line
 // in case you have 2 buttons (referred to as main and aux buttons) leave this line commented out
 
-//#define SINGLEBUTTON
+#define SINGLEBUTTON
  
 #ifdef DIYINO_PRIME 
   #define MAIN_BUTTON     12

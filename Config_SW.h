@@ -58,13 +58,24 @@
  * With the following compile directives you can fine tune your saber effects like clash, swing, blaster deflect etc.
  */
 
+/*
+ * CLASH DETECTION METHOD
+ * Clash can be detected by programming the mpu to trigger an interupt
+ * on motion. If a motion interrupt is triggered, it can either be
+ * detected by connecting the MPU's INT signal to D2 of the AVR (-> CLASH_DET_MPU_INT)
+ * or by polling the INT_STATUS register via I2C and determining the value (-> CLASH_DET_MPU_POLL)
+ * of bit 6
+ */
+//#define CLASH_DET_MPU_INT
+#define CLASH_DET_MPU_POLL
+ 
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
  *  of their respective suppress pareameters
 
  */
 #define SWING_SUPPRESS     300
-#define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
+#define CLASH_SUPRESS     200  // do not modify below 400, otherwise interlocking clash sounds can occur
 #define BLASTERBLOCK_SUPRESS     200
 
 /*
@@ -80,7 +91,7 @@
 #define BLASTER_FX_DURATION 150
 #define SWING_FX_DURATION 400
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration
-#define SWING_QUATERNION
+//#define SWING_QUATERNION
 
 /*
  * BUTTONS PARAMETERS

@@ -815,11 +815,13 @@ void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_
 
 void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB SndFnt_MainColor={0,0,0}) {
   #if defined LEDSTRINGS
-    analogWrite(ledPins[random(1,5)], LOW);  
+    analogWrite(ledPins[random(1,5)], LOW); 
+    delay(BLASTER_FX_DURATION); 
   #endif
   
   #if defined STAR_LED
-    lightOn(ledPins, -1, currentColor);  
+    lightOn(ledPins, -1, currentColor); 
+    delay(BLASTER_FX_DURATION);  
   #endif
   
   #ifdef ADF_PIXIE_BLADE
@@ -827,6 +829,7 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
       strip.setPixelColor(i, currentColor.r, currentColor.g, currentColor.b);
     }
     strip.show();
+    delay(BLASTER_FX_DURATION); 
   #endif
             
   #ifdef PIXELBLADE
