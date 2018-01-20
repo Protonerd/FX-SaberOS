@@ -3,7 +3,7 @@
  *
  * Created on: 30 March 2017
  * author:    Andras Kun (kun.andras@yahoo.de)
- * Source :   https://github.com/neskweek/LightSaberOS
+ * Source :  https://github.com/Protonerd/FX-SaberOS
  * This tab contains all settings necessary to define your saber board's electronic hardware configuration
  */
 

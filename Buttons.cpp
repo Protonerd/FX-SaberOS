@@ -3,7 +3,8 @@
  *
  *  Created on: 21 Octber 2016
  * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
- * Source : 	https://github.com/neskweek/LightSaberOS
+ * Source :  https://github.com/Protonerd/FX-SaberOS
+://github.com/neskweek/LightSaberOS
  */
 
 #include "Buttons.h"
@@ -110,7 +111,11 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       #ifdef GRAVITY_COLOR
         ColorMixing(storage.sndProfile[storage.soundFont].mainColor,modification,MAX_BRIGHTNESS, SaturateColor);
       #else if COLOR_PROFILE
-
+        if (ButtonActionType==SINGLE_CLICK){
+          confParseValue(modification, 0, 14, incrementSign);
+          modification = value;
+          getColorFix(modification);
+        }
       #endif
       storage.sndProfile[storage.soundFont].mainColor.r=currentColor.r;
       storage.sndProfile[storage.soundFont].mainColor.g=currentColor.g;
@@ -120,7 +125,15 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
     
       }
     else if (ConfigModeSubStates==CS_CLASHCOLOR) {
-      ColorMixing(storage.sndProfile[storage.soundFont].clashColor,modification,MAX_BRIGHTNESS, SaturateColor);
+      #ifdef GRAVITY_COLOR
+        ColorMixing(storage.sndProfile[storage.soundFont].clashColor,modification,MAX_BRIGHTNESS, SaturateColor);
+      #else if COLOR_PROFILE
+        if (ButtonActionType==SINGLE_CLICK){
+          confParseValue(modification, 0, 14, incrementSign);
+          modification = value;
+          getColorFix(modification);
+        }
+      #endif 
       storage.sndProfile[storage.soundFont].clashColor.r=currentColor.r;
       storage.sndProfile[storage.soundFont].clashColor.g=currentColor.g;
       storage.sndProfile[storage.soundFont].clashColor.b=currentColor.b;
@@ -128,7 +141,15 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       delay(50);
     }
     else if (ConfigModeSubStates==CS_BLASTCOLOR) {
-      ColorMixing(storage.sndProfile[storage.soundFont].blasterboltColor,modification,MAX_BRIGHTNESS, SaturateColor);
+      #ifdef GRAVITY_COLOR
+        ColorMixing(storage.sndProfile[storage.soundFont].blasterboltColor,modification,MAX_BRIGHTNESS, SaturateColor);
+      #else if COLOR_PROFILE
+        if (ButtonActionType==SINGLE_CLICK){
+          confParseValue(modification, 0, 14, incrementSign);
+          modification = value;
+          getColorFix(modification);
+        }
+      #endif 
       storage.sndProfile[storage.soundFont].blasterboltColor.r=currentColor.r;
       storage.sndProfile[storage.soundFont].blasterboltColor.g=currentColor.g;
       storage.sndProfile[storage.soundFont].blasterboltColor.b=currentColor.b;

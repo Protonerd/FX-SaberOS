@@ -2,7 +2,7 @@
  * Light.cpp
  *
  * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)lightClashEffect
- * Source : 	https://github.com/neskweek/LightSaberOS
+ * Source :  https://github.com/Protonerd/FX-SaberOS
  */
 #include "Light.h"
 #include "Config_HW.h"
@@ -932,16 +932,19 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
     for (uint8_t i = 0; i <= 5; i++) {
       analogWrite(ledPins[i], 255);
     }
+    delay(CLASH_FX_DURATION);  // clash duration
   #endif
   
   #if defined STAR_LED
     getColor(color);
     lightOn(ledPins, -1, currentColor);
+    delay(CLASH_FX_DURATION);  // clash duration
   #endif
 
   #ifdef ADF_PIXIE_BLADE
     //getColor(storage.sndProfile[storage.soundFont].clashColor);
     lightOn(ledPins, -1, color);
+    delay(CLASH_FX_DURATION);  // clash duration
   #endif
   
   #if defined PIXELBLADE
@@ -957,10 +960,109 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
     else { // #else
           getColor(storage.sndProfile[storage.soundFont].clashColor);
           lightOn(ledPins, -1, currentColor);
+          delay(CLASH_FX_DURATION);  // clash duration
     } // #endif
   #endif
   
 }
+
+#ifdef COLOR_PROFILE
+void getColorFix(uint8_t colorID) {
+  switch (colorID) {
+  case 0:
+//Red
+    currentColor.r = 200;
+    currentColor.g = 0;
+    currentColor.b = 0;
+    break;
+  case 1:
+//Yellow
+    currentColor.r = 200;
+    currentColor.g = 200;
+    currentColor.b = 0;
+    break;
+  case 2:
+//Green
+    currentColor.r = 0;
+    currentColor.g = 200;
+    currentColor.b = 0;
+    break;
+  case 3:
+//Aqua
+    currentColor.r = 0;
+    currentColor.g = 200;
+    currentColor.b = 200;
+    break;
+  case 4:
+//Blue
+    currentColor.r = 0;
+    currentColor.g = 0;
+    currentColor.b = 200;
+    break;
+  case 5:
+//Fuschia
+    currentColor.r = 200;
+    currentColor.g = 0;
+    currentColor.b = 200;
+    break;
+  case 6:
+//DarkGrey
+    currentColor.r = 150;
+    currentColor.g = 150;
+    currentColor.b = 150;
+    break;
+  case 7:
+//DarkOrange
+    currentColor.r = 200;
+    currentColor.g = 102;
+    currentColor.b = 0;
+    break;
+  case 8:
+//DarkViolet
+    currentColor.r = 116;
+    currentColor.g = 0;
+    currentColor.b = 166;
+    break;
+  case 9:
+//DodgerBlue
+    currentColor.r = 24;
+    currentColor.g = 112;
+    currentColor.b = 200;
+    break;
+  case 10:
+//Gold
+    currentColor.r = 200;
+    currentColor.g = 168;
+    currentColor.b = 0;
+    break;
+  case 11:
+//GoldenRod
+    currentColor.r = 170;
+    currentColor.g = 130;
+    currentColor.b = 24;
+    break;
+  case 12:
+//Indigo
+    currentColor.r = 116;
+    currentColor.g = 0;
+    currentColor.b = 204;
+    break;
+  case 13:
+//LightGreen
+    currentColor.r = 112;
+    currentColor.g = 186;
+    currentColor.b = 112;
+    break;
+
+  default:
+// White (if enough voltage)
+    currentColor.r = 200;
+    currentColor.g = 200;
+    currentColor.b = 200;
+    break;
+  }
+} //getColorFix
+#endif
 
 void BladeMeter (uint8_t ledPins[], int meterLevel) {  //expects input of 0-100
   //normalize data if to max and min if out of range

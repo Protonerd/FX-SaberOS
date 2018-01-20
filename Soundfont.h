@@ -3,8 +3,8 @@
  *
  * Created on: 	21 Octber 2016
  * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
- * Source : 	https://github.com/neskweek/LightSaberOS
- * Description:	Soundfont Config file for LightSaberOS
+ * Source : 	Source :   https://github.com/Protonerd/FX-SaberOS
+ * Description:	Soundfont Config file for FX-SaberOS
  *
  * This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/.

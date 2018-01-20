@@ -3,7 +3,7 @@
  *
  * Created on: 30 March 2017
  * author:    Andras Kun (kun.andras@yahoo.de)
- * Source :   https://github.com/neskweek/LightSaberOS
+ * Source :  https://github.com/Protonerd/FX-SaberOS
  * This tab contains all settings necessary to define your saber board's electronic software configuration
  */
 
@@ -138,7 +138,7 @@
  *  If instead you would like to work with pre-set color profiles (15 different, pre-defined colors)
  *  comment out the line with GRAVITY_COLOR, which will define COLOR_PROFILE to be used.
  *************************************/
-#define GRAVITY_COLOR
+//#define GRAVITY_COLOR
 #ifndef GRAVITY_COLOR
   #define COLOR_PROFILE
 #endif

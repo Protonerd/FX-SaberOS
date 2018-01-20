@@ -3,7 +3,7 @@
  *
  *  Created on: 21 Octber 2016
  * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
- * Source : 	https://github.com/neskweek/LightSaberOS
+ * Source :  https://github.com/Protonerd/FX-SaberOS
  */
 
 #if not defined LIGHT_H_
@@ -52,6 +52,8 @@ void lightClashEffect(uint8_t ledPins[], cRGB color={0,0,0});
 #endif
 void pixelblade_KillKey_Enable();
 void pixelblade_KillKey_Disable();
+
+void getColorFix(uint8_t colorID);
 
 void FoCOn (uint8_t pin);
 void FoCOff (uint8_t pin);

@@ -2,7 +2,7 @@
  * Config.cpp
  *
  * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
- * Source : 	https://github.com/neskweek/LightSaberOS
+ * Source :  https://github.com/Protonerd/FX-SaberOS
  *      Author: neskw
  */
 #include "ConfigMenu.h"
