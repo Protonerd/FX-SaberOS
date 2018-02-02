@@ -87,7 +87,7 @@
 /*
  * How long do the light effect last for the different FX's, choose to synchronize with the sound effect
  */
-#define CLASH_FX_DURATION 200
+#define CLASH_FX_DURATION 400
 #define BLASTER_FX_DURATION 150
 #define SWING_FX_DURATION 400
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration

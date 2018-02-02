@@ -971,94 +971,99 @@ void getColorFix(uint8_t colorID) {
   switch (colorID) {
   case 0:
 //Red
-    currentColor.r = 200;
+    currentColor.r = MAX_BRIGHTNESS;
     currentColor.g = 0;
     currentColor.b = 0;
     break;
   case 1:
-//Yellow
-    currentColor.r = 200;
-    currentColor.g = 200;
+//Orange
+    currentColor.r = MAX_BRIGHTNESS;
+    currentColor.g = MAX_BRIGHTNESS/4;
     currentColor.b = 0;
     break;
   case 2:
-//Green
-    currentColor.r = 0;
-    currentColor.g = 200;
+//Amber
+    currentColor.r = MAX_BRIGHTNESS;
+    currentColor.g = MAX_BRIGHTNESS*66/100;
     currentColor.b = 0;
     break;
   case 3:
-//Aqua
-    currentColor.r = 0;
-    currentColor.g = 200;
-    currentColor.b = 200;
+//Yellow
+    currentColor.r = MAX_BRIGHTNESS;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = 0;
     break;
   case 4:
+//Lime
+    currentColor.r = MAX_BRIGHTNESS*34/100;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = 0;
+    break;
+  case 5:
+//Green
+    currentColor.r = 0;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = 0;
+    break;
+  case 6:
+//Cyan
+    currentColor.r = 0;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = MAX_BRIGHTNESS*34/100;
+    break;
+  case 7:
+//Light Blue
+    currentColor.r = 0;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = MAX_BRIGHTNESS*63/100;
+    break;
+  case 8:
+//Ice Blue
+    currentColor.r = 0;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = MAX_BRIGHTNESS;
+    break;
+  case 9:
 //Blue
     currentColor.r = 0;
     currentColor.g = 0;
-    currentColor.b = 200;
-    break;
-  case 5:
-//Fuschia
-    currentColor.r = 200;
-    currentColor.g = 0;
-    currentColor.b = 200;
-    break;
-  case 6:
-//DarkGrey
-    currentColor.r = 150;
-    currentColor.g = 150;
-    currentColor.b = 150;
-    break;
-  case 7:
-//DarkOrange
-    currentColor.r = 200;
-    currentColor.g = 102;
-    currentColor.b = 0;
-    break;
-  case 8:
-//DarkViolet
-    currentColor.r = 116;
-    currentColor.g = 0;
-    currentColor.b = 166;
-    break;
-  case 9:
-//DodgerBlue
-    currentColor.r = 24;
-    currentColor.g = 112;
-    currentColor.b = 200;
+    currentColor.b = MAX_BRIGHTNESS;
     break;
   case 10:
-//Gold
-    currentColor.r = 200;
-    currentColor.g = 168;
-    currentColor.b = 0;
+//Mauve
+    currentColor.r = MAX_BRIGHTNESS*12/100;
+    currentColor.g = 0;
+    currentColor.b = MAX_BRIGHTNESS;
     break;
   case 11:
-//GoldenRod
-    currentColor.r = 170;
-    currentColor.g = 130;
-    currentColor.b = 24;
+//Purple
+    currentColor.r = MAX_BRIGHTNESS*35/100;
+    currentColor.g = 0;
+    currentColor.b = MAX_BRIGHTNESS;
     break;
   case 12:
-//Indigo
-    currentColor.r = 116;
+//Pink
+    currentColor.r = MAX_BRIGHTNESS;
     currentColor.g = 0;
-    currentColor.b = 204;
+    currentColor.b = MAX_BRIGHTNESS;
     break;
   case 13:
-//LightGreen
-    currentColor.r = 112;
-    currentColor.g = 186;
-    currentColor.b = 112;
+//Crimson
+    currentColor.r = MAX_BRIGHTNESS;
+    currentColor.g = 0;
+    currentColor.b = MAX_BRIGHTNESS*5/100;
     break;
-
+  case 14:
+//White
+    currentColor.r = MAX_BRIGHTNESS;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = MAX_BRIGHTNESS;
+    break;
   default:
 // White (if enough voltage)
-    currentColor.r = 200;
-    currentColor.g = 200;
-    currentColor.b = 200;
+    currentColor.r = 100;
+    currentColor.g = 100;
+    currentColor.b = 100;
     break;
   }
 } //getColorFix

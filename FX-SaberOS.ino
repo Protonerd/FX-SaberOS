@@ -445,7 +445,7 @@ Serial.println(configAdress);
   mainButton.setClickTicks(CLICK);
   mainButton.setPressTicks(PRESS_CONFIG);
   mainButton.attachClick(mainClick);
-  mainButton.attachDoubleClick(mainDoubleClick);
+  //mainButton.attachDoubleClick(mainDoubleClick);
   mainButton.attachLongPressStart(mainLongPressStart);
   mainButton.attachLongPressStop(mainLongPressStop);
   mainButton.attachDuringLongPress(mainLongPress);
@@ -456,7 +456,7 @@ Serial.println(configAdress);
   lockupButton.setClickTicks(CLICK);
   lockupButton.setPressTicks(PRESS_CONFIG);
   lockupButton.attachClick(lockupClick);
-  lockupButton.attachDoubleClick(lockupDoubleClick);
+  //lockupButton.attachDoubleClick(lockupDoubleClick);
   lockupButton.attachLongPressStart(lockupLongPressStart);
   lockupButton.attachLongPressStop(lockupLongPressStop);
   lockupButton.attachDuringLongPress(lockupLongPress);
@@ -906,63 +906,69 @@ void loop() {
      CONFIG MODE HANDLER
   *//////////////////////////////////////////////////////////////////////////////////////////////////////////
   else if (SaberState == S_CONFIG) {
-    // read out the motion sensor in order to be able to detect clashes in Config Mode for the "Escape Paths"
+    // read out the motion sensor in order to be able to detect clashes in Config Mode for the "Hit-and-Run"
     motionEngine();
     if ((mpuIntStatus > 60 and mpuIntStatus < 70) and (millis() - sndSuppress >= CLASH_SUPRESS)) {
       sndSuppress = millis();
       // define what shall happen in each Config Sub-State if the Escape Path is activated
       #if defined LS_INFO
-        Serial.println("Escape Path is activated");
+        Serial.println("Hit-and-Run is activated");
       #endif
-      if (ConfigModeSubStates==CS_BATTERYLEVEL or ConfigModeSubStates==CS_MAINCOLOR or ConfigModeSubStates==CS_CLASHCOLOR or ConfigModeSubStates==CS_BLASTCOLOR or ConfigModeSubStates==CS_STORAGEACCESS or ConfigModeSubStates==CS_UARTMODE) {
-        changeMenu = false;
-        SaberState=S_STANDBY;
-        PrevSaberState=S_CONFIG;
-        #ifdef PIXELBLADE
-          pixelblade_KillKey_Disable();
-        #endif      
-      }
-      // for all other states:
-      switch(ConfigModeSubStates) {
-        case CS_VOLUME:
-          // turn on the volume full
-          storage.volume = 30; //MAX
-          BladeMeter(ledPins, storage.volume*100/30);
-          Set_Volume(storage.volume); // Too Slow: we'll change volume on exit
-          delay(50);
-          #if defined LS_INFO
-            Serial.println(storage.volume);
-          #endif             
-          break;
-        case CS_SOUNDFONT:
-          break;      
-        case CS_FLICKERTYPE:
-          break;
-        case CS_POWERONOFFTYPE:
-          break;
-        case CS_SWINGSENSITIVITY:
-        // upon clash increase swing sensitivity by 1/10th of a g (1g=16384)
-        if (storage.sndProfile[storage.soundFont].swingSensitivity <= 14400 ) {
-          storage.sndProfile[storage.soundFont].swingSensitivity=storage.sndProfile[storage.soundFont].swingSensitivity+1600;
+      #ifdef SINGLEBUTTON
+        // In case a clash is detected, move to the next menu item in single button mode
+        NextConfigState();
+      #else
+        // in two button mode, activate different Hit-and-Run functions depending on the config state
+        if (ConfigModeSubStates==CS_BATTERYLEVEL or ConfigModeSubStates==CS_MAINCOLOR or ConfigModeSubStates==CS_CLASHCOLOR or ConfigModeSubStates==CS_BLASTCOLOR or ConfigModeSubStates==CS_STORAGEACCESS or ConfigModeSubStates==CS_UARTMODE) {
+          changeMenu = false;
+          SaberState=S_STANDBY;
+          PrevSaberState=S_CONFIG;
+          #ifdef PIXELBLADE
+            pixelblade_KillKey_Disable();
+          #endif      
         }
-        else {
-          storage.sndProfile[storage.soundFont].swingSensitivity=0;
-        }
-/*          if (storage.sndProfile[storage.soundFont].swingSensitivity < 8000 ) {
-            storage.sndProfile[storage.soundFont].swingSensitivity=8000;
+        // for all other states:
+        switch(ConfigModeSubStates) {
+          case CS_VOLUME:
+            // turn on the volume full
+            storage.volume = 30; //MAX
+            BladeMeter(ledPins, storage.volume*100/30);
+            Set_Volume(storage.volume); // Too Slow: we'll change volume on exit
+            delay(50);
+            #if defined LS_INFO
+              Serial.println(storage.volume);
+            #endif             
+            break;
+          case CS_SOUNDFONT:
+            break;      
+          case CS_FLICKERTYPE:
+            break;
+          case CS_POWERONOFFTYPE:
+            break;
+          case CS_SWINGSENSITIVITY:
+          // upon clash increase swing sensitivity by 1/10th of a g (1g=16384)
+          if (storage.sndProfile[storage.soundFont].swingSensitivity <= 14400 ) {
+            storage.sndProfile[storage.soundFont].swingSensitivity=storage.sndProfile[storage.soundFont].swingSensitivity+1600;
           }
-          else if ((storage.sndProfile[storage.soundFont].swingSensitivity >= 8000 ) and (storage.sndProfile[storage.soundFont].swingSensitivity < 16000 )) {
-            storage.sndProfile[storage.soundFont].swingSensitivity=16000;
+          else {
+            storage.sndProfile[storage.soundFont].swingSensitivity=0;
           }
-          else { // 
-            storage.sndProfile[storage.soundFont].swingSensitivity=100;
-          }*/
-          BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);
-          Serial.println(storage.sndProfile[storage.soundFont].swingSensitivity);
-          break;
-        case CS_SLEEPINIT:
-          break;
-          }
+  /*          if (storage.sndProfile[storage.soundFont].swingSensitivity < 8000 ) {
+              storage.sndProfile[storage.soundFont].swingSensitivity=8000;
+            }
+            else if ((storage.sndProfile[storage.soundFont].swingSensitivity >= 8000 ) and (storage.sndProfile[storage.soundFont].swingSensitivity < 16000 )) {
+              storage.sndProfile[storage.soundFont].swingSensitivity=16000;
+            }
+            else { // 
+              storage.sndProfile[storage.soundFont].swingSensitivity=100;
+            }*/
+            BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);
+            Serial.println(storage.sndProfile[storage.soundFont].swingSensitivity);
+            break;
+          case CS_SLEEPINIT:
+            break;
+            }
+      #endif // SINGLEBUTTON      
     }
     if (PrevSaberState == S_STANDBY) { // entering config mode
       PrevSaberState = S_CONFIG;
@@ -1080,6 +1086,9 @@ void loop() {
     if (PrevSaberState == S_CONFIG) { // we just leaved Config Mode
       saveConfig();
       PrevSaberState = S_STANDBY;
+      #if defined DEEP_SLEEP
+        sleepTimer=millis(); // reset sleep time counter
+      #endif
       // these commands are not used at the moment and make exit from config mode too long
       //Disable_FTDI(false);
       //Disable_MP3(false);

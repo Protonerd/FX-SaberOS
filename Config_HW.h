@@ -21,8 +21,8 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-#define DIYINO_PRIME
-//#define DIYINO_STARDUST
+//#define DIYINO_PRIME
+#define DIYINO_STARDUST
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -60,8 +60,8 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-//#define STAR_LED
-#define PIXELBLADE
+#define STAR_LED
+//#define PIXELBLADE
 //#define ADF_PIXIE_BLADE
 
 /************************************/
