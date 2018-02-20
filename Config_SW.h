@@ -66,8 +66,8 @@
  * or by polling the INT_STATUS register via I2C and determining the value (-> CLASH_DET_MPU_POLL)
  * of bit 6
  */
-//#define CLASH_DET_MPU_INT
-#define CLASH_DET_MPU_POLL
+#define CLASH_DET_MPU_INT
+//#define CLASH_DET_MPU_POLL
  
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
@@ -124,7 +124,7 @@
  * If you a device with a CPU wich is not
  * an Atmega328 : COMMENT THIS
  *************************************/
-#define DEEP_SLEEP
+//#define DEEP_SLEEP
 #if defined DEEP_SLEEP
   #define SLEEPYTIME      60000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
   #include <avr/sleep.h>

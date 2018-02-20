@@ -195,6 +195,7 @@ void mainClick() {
 	Serial.println(F("Main button click."));
 #endif
 	if (SaberState==S_SABERON) {
+    /*
     if (lockuponclash) {
       HumRelaunch();
       ActionModeSubStates = AS_HUM;
@@ -208,8 +209,25 @@ void mainClick() {
 #if defined LS_BUTTON_DEBUG
       Serial.println(F("Start clash triggered lockup (either pre or active phase)"));
 #endif 
+    }*/
+    #if defined LS_BUTTON_DEBUG
+      Serial.println(F("Start motion triggered blaster bolt deflect"));
+    #endif
+    if (ActionModeSubStates!=AS_BLASTERDEFLECTMOTION) { // start motion triggered blaster deflect
+      ActionModeSubStates=AS_BLASTERDEFLECTMOTION;
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("Start motion triggered blaster bolt deflect"));
+      #endif
     }
-	}
+    else { // stop motion triggered blaster deflect
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("End motion triggered blaster bolt deflect"));
+      #endif
+      HumRelaunch();
+      ActionModeSubStates=AS_HUM;
+      accentLEDControl(AL_ON);
+    } 
+  }
 	else if (SaberState==S_CONFIG) {
     #ifdef DEEP_SLEEP
     if (ConfigModeSubStates==CS_SLEEPINIT) {

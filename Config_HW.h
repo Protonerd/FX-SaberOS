@@ -60,8 +60,8 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-#define STAR_LED
-//#define PIXELBLADE
+//#define STAR_LED
+#define PIXELBLADE
 //#define ADF_PIXIE_BLADE
 
 /************************************/

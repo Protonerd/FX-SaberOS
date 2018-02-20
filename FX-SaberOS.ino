@@ -467,8 +467,8 @@ Serial.println(configAdress);
   /************ DEEP_SLEEP MODE SETTINGS **********/
   pinMode(MP3_PSWITCH, OUTPUT);
   pinMode(FTDI_PSWITCH, OUTPUT);
-  digitalWrite(MP3_PSWITCH, LOW); // enable MP3 player with A0
-  digitalWrite(FTDI_PSWITCH, LOW); // enable FTDI player with A1
+  digitalWrite(MP3_PSWITCH, LOW); // enable MP3 player
+  digitalWrite(FTDI_PSWITCH, LOW); // enable FTDI player
   // pin change interrupt masks (see below list)
   PCMSK2 |= bit (PCINT20);   // pin 4 Aux button
   PCMSK0 |= bit (PCINT4);    // pin 12 Main button
@@ -1539,14 +1539,15 @@ void SleepModeEntry() {
   // pin change interrupt masks (see below list)
   //PCMSK2 |= bit (PCINT20);   // pin 4 Aux button
   PCMSK0 |= bit (PCINT4);    // pin 12 Main button
-  mpu.setSleepEnabled(true);
-  Disable_MP3(true);
-  mpu.setSleepEnabled(true); // included as dummy, for an unknown reason if it's not here and the dfplayer.sleep() is commented out, sound is disabled
-  //dfplayer.sleep();
+  // contrain the communication signals to the MP3 player to low, otherwise they will back-supply the module
   pinMode(DFPLAYER_RX, OUTPUT);
   digitalWrite(DFPLAYER_RX, LOW);
   pinMode(DFPLAYER_TX, OUTPUT);
   digitalWrite(DFPLAYER_TX, LOW);
+  mpu.setSleepEnabled(true);
+  Disable_MP3(true);
+  //mpu.setSleepEnabled(true); // included as dummy, for an unknown reason if it's not here and the dfplayer.sleep() is commented out, sound is disabled
+  //dfplayer.sleep();
   delay (300);
   Disable_FTDI(true);
   sleepNow();     // sleep function called here
@@ -1557,21 +1558,17 @@ void SleepModeExit() {
   // cancel sleep as a precaution
   sleep_disable();
   power_all_enable ();   // enable modules again
+  //digitalWrite(11,HIGH);
   Disable_FTDI(false);
-  mpu.setSleepEnabled(false);
-  delay (300);
+  //mpu.setSleepEnabled(false);
+  //delay (300);
   Disable_MP3(false);
+  //digitalWrite(11,LOW);
   pinMode(DFPLAYER_RX, OUTPUT);
   pinMode(DFPLAYER_TX, INPUT);
-  delay (300);
-  // only wake up the device if the main button is pressed for at least 1 sec
-  //delay(1000);
-  //if (digitalRead(MAIN_BUTTON) == LOW) {
-    setup(); // redo all initializations
-  //}
-  //else { // Anti-Wake up Protection triggers, go back to slee mode
-  //  SleepModeEntry();
-  //}
+  //delay (300);
+  //digitalWrite(11,HIGH);
+  setup(); // redo all initializations
 }
 
 
@@ -1581,12 +1578,12 @@ void Disable_FTDI(bool ftdi_off) {
 
   if (ftdi_off) {  //  disable FTDI
     digitalWrite(FTDI_PSWITCH, HIGH); // disable the FTDI chip
-    delay (800);  // cut power to FTDI, this delay is needed, the sleep
+    //delay (800);  // cut power to FTDI, this delay is needed, the sleep
                   //function will provoke a Serial error otherwise!!
   }
   else {  //  enable ftdi
     digitalWrite(FTDI_PSWITCH, LOW); // enable the FTDI chip
-    delay (800);    
+    //delay (800);    
   }
   
 }
@@ -1595,11 +1592,11 @@ void Disable_MP3(bool mp3_off) {
 
   if (mp3_off) {  //  disable MP3
     digitalWrite(MP3_PSWITCH, HIGH); // disable the MP3 chip and the audio amp
-    delay (300);
+    //delay (300);
   }
   else {  //  enable MP3
     digitalWrite(MP3_PSWITCH, LOW); // enable the MP3 chip and the audio amp
-    delay (300);    
+    //delay (300);    
   }
   
 }

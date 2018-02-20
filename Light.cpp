@@ -966,7 +966,7 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
   
 }
 
-#ifdef COLOR_PROFILE
+#if defined COLOR_PROFILE and not defined LEDSTRINGS
 void getColorFix(uint8_t colorID) {
   switch (colorID) {
   case 0:
