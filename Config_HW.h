@@ -21,8 +21,9 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-//#define DIYINO_PRIME
-#define DIYINO_STARDUST
+//#define DIYINO_PRIME // including home-brew
+//#define DIYINO_STARDUST_V2
+#define DIYINO_STARDUST_V3
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -43,7 +44,7 @@
   #ifndef SINGLEBUTTON
     #define AUX_BUTTON   4
   #endif
-#else if DIYINO_STARDUST
+#else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
   #define MAIN_BUTTON      12
   #ifndef SINGLEBUTTON
     #define AUX_BUTTON   11 // 2
@@ -60,8 +61,8 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-//#define STAR_LED
-#define PIXELBLADE
+#define STAR_LED
+//#define PIXELBLADE
 //#define ADF_PIXIE_BLADE
 
 /************************************/
@@ -86,7 +87,7 @@
 #ifdef DIYINO_PRIME 
   #define MP3_PSWITCH 15 // A1
   #define FTDI_PSWITCH 16 // A2
-#else if DIYINO_STARDUST 
+#else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3 
   #define MP3_PSWITCH 17 // A3
   #define FTDI_PSWITCH 16 // A2
 #endif
@@ -106,7 +107,7 @@
     #define LED_RED       3
     #define LED_GREEN       5
     #define LED_BLUE      6
-  #else if DIYINO_STARDUST
+  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     #define LED_RED       5
     #define LED_GREEN       6
     #define LED_BLUE      9
@@ -151,7 +152,7 @@
     #define LS4       9
     #define LS5       10
     #define LS6       11
-  #else if DIYINO_STARDUST
+  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     #define LS1       5
     #define LS2       6
     #define LS3      9
@@ -170,7 +171,7 @@
  *************************************/
 #ifdef DIYINO_PRIME
   #define ACCENT_LED 14 //A0
-#else if DIYINO_STARDUST
+#else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
   #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
 #endif
 /*
@@ -189,7 +190,7 @@
   #ifdef DIYINO_PRIME
     #define BATTERY_READPIN 17 //A3 - read battery level
   #endif
-  #ifdef DIYINO_STARDUST
+  #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     #define BATTERY_READPIN 15
   #endif
 #endif

@@ -96,7 +96,7 @@ VectorInt16 prevDeltAccel;
 #if defined LEDSTRINGS
   #ifdef DIYINO_PRIME
     uint8_t ledPins[] = {LS1, LS2, LS3, LS4, LS5, LS6};
-  #else if #ifdef DIYINO_STARDUST
+  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     uint8_t ledPins[] = {LS1, LS2, LS3};
   #endif
   uint8_t blasterPin;
@@ -108,7 +108,7 @@ extern bool fireblade;
 #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
   #ifdef DIYINO_PRIME
     uint8_t ledPins[] = {LS1, LS2, LS3, LS4, LS5, LS6};
-  #else if #ifdef DIYINO_STARDUST
+  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     uint8_t ledPins[] = {LS1, LS2, LS3};
   #endif
   WS2812 pixels(NUMPIXELS);
@@ -657,6 +657,17 @@ void loop() {
         }
       }
     }
+    // CLASH state, flicker with clash color/brightness for the duration of CLASH_FX_DURATION
+    else if (ActionModeSubStates==AS_CLASH){
+      // check if duration expired
+      if (millis()-sndSuppress < CLASH_FX_DURATION) {
+        lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates);
+      }
+      else {
+        ActionModeSubStates=AS_HUM;
+        sndSuppress=millis();
+      }
+    }
     /*
        SWING DETECTION
        We detect swings as hilt's orientation change
@@ -677,53 +688,6 @@ void loop() {
       #else // SWING_QUATERNION is defined
         and abs(curRotation.w * 1000) < 999 // some rotation movement have been initiated
       and (
-        #if defined BLADE_X
-
-        (
-          (millis() - sndSuppress > SWING_SUPPRESS) // The movement doesn't follow another to closely
-          and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity  // and it has suffisent power on a certain axis
-               or abs(curDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
-               or abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity * 10)
-        )
-        or (// A reverse movement follow a first one
-          (millis() - sndSuppress2 > SWING_SUPPRESS)   // The reverse movement doesn't follow another reverse movement to closely
-          // and it must be a reverse movement on Vertical axis
-          and (
-            abs(curDeltAccel.y) > abs(curDeltAccel.z)
-            and abs(prevDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity
-            and (
-              (prevDeltAccel.y > 0
-               and curDeltAccel.y < -storage.sndProfile[storage.soundFont].swingSensitivity)
-              or (
-                prevDeltAccel.y < 0
-                and curDeltAccel.y	> storage.sndProfile[storage.soundFont].swingSensitivity
-              )
-            )
-          )
-        )
-        or (// A reverse movement follow a first one
-          (millis() - sndSuppress2 > SWING_SUPPRESS)  // The reverse movement doesn't follow another reverse movement to closely
-          and ( // and it must be a reverse movement on Horizontal axis
-            abs(curDeltAccel.z) > abs(curDeltAccel.y)
-            and abs(prevDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
-            and (
-              (prevDeltAccel.z > 0
-               and curDeltAccel.z < -storage.sndProfile[storage.soundFont].swingSensitivity)
-              or (
-                prevDeltAccel.z < 0
-                and curDeltAccel.z	> storage.sndProfile[storage.soundFont].swingSensitivity
-              )
-            )
-          )
-        )
-      // the movement must not be triggered by pure blade rotation (wrist rotation)
-      and not (
-        abs(prevRotation.x * 1000 - curRotation.x * 1000) > abs(prevRotation.y * 1000 - curRotation.y * 1000)
-        and
-        abs(prevRotation.x * 1000 - curRotation.x * 1000) > abs(prevRotation.z * 1000 - curRotation.z * 1000)
-      )
-
-      #endif // BLADE_X
       #if defined BLADE_Y
       (
         (millis() - sndSuppress > SWING_SUPPRESS) // The movement doesn't follow another to closely
@@ -769,51 +733,6 @@ void loop() {
         abs(prevRotation.y * 1000 - curRotation.y * 1000) > abs(prevRotation.z * 1000 - curRotation.z * 1000)
       )
       #endif // BLADE_Y
-      #if defined BLADE_Z
-      (
-        (millis() - sndSuppress > SWING_SUPPRESS) // The movement doesn't follow another to closely
-        and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity  // and it has suffisent power on a certain axis
-             or abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity
-             or abs(curDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity * 10)
-      )
-      or (// A reverse movement follow a first one
-        (millis() - sndSuppress2 > SWING_SUPPRESS)   // The reverse movement doesn't follow another reverse movement to closely
-        // and it must be a reverse movement on Vertical axis
-        and (
-          abs(curDeltAccel.y) > abs(curDeltAccel.x)
-          and abs(prevDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity
-          and (
-            (prevDeltAccel.y > 0
-             and curDeltAccel.y < -storage.sndProfile[storage.soundFont].swingSensitivity)
-            or (
-              prevDeltAccel.y < 0
-              and curDeltAccel.y	> storage.sndProfile[storage.soundFont].swingSensitivity
-            )
-          )
-        )
-      )
-      or (// A reverse movement follow a first one
-        (millis() - sndSuppress2 > SWING_SUPPRESS)  // The reverse movement doesn't follow another reverse movement to closely
-        and ( // and it must be a reverse movement on Horizontal axis
-          abs(curDeltAccel.x) > abs(curDeltAccel.y)
-          and abs(prevDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity
-          and (
-            (prevDeltAccel.x > 0
-             and curDeltAccel.x < -storage.sndProfile[storage.soundFont].swingSensitivity)
-            or (
-              prevDeltAccel.x < 0
-              and curDeltAccel.x	> storage.sndProfile[storage.soundFont].swingSensitivity
-            )
-          )
-        )
-      )
-      // the movement must not be triggered by pure blade rotation (wrist rotation)
-      and not (
-        abs(prevRotation.z * 1000 - curRotation.z * 1000) > abs(prevRotation.y * 1000 - curRotation.y * 1000)
-        and
-        abs(prevRotation.z * 1000 - curRotation.z * 1000) > abs(prevRotation.x * 1000 - curRotation.x * 1000)
-      )
-      #endif // BLADE_Z
       ) 
 #endif // SWING_QUATERNION 
   )     
@@ -1356,10 +1275,12 @@ void FX_Clash() {
                THIS IS A CLASH  !
             */
             ActionModeSubStates = AS_CLASH;
+            // the next function only activates the clash color (and flashes in case of fireblade)
             lightClashEffect(ledPins, storage.sndProfile[storage.soundFont].clashColor);
+            
             if (!fireblade) {
               //delay(CLASH_FX_DURATION);  // clash duration
-              delayMicroseconds(CLASH_FX_DURATION*1000);
+              //delayMicroseconds(CLASH_FX_DURATION*1000);
             }
             sndSuppress = millis();
             sndSuppress2 = millis();
@@ -1635,7 +1556,7 @@ void BatLevel_ConfigEnter() {
       //      int batLevel = 100 * (1 / batCheck() - 1 / LOW_BATTERY) / (1 / FULL_BATTERY - 1 / LOW_BATTERY);
       int batLevel = 100 * ((batCheck() - LOW_BATTERY) / (FULL_BATTERY - LOW_BATTERY));
   #endif
-  #ifdef DIYINO_STARDUST
+  #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
       // flush out the ADC
       getBandgap();
       getBandgap();
@@ -1662,7 +1583,7 @@ void MonitorBattery() {
   #ifdef DIYINO_PRIME
     //BatteryStatus=analogRead(BATTERY_READPIN);
   #endif
-  #ifdef DIYINO_STARDUST
+  #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     BladeMeter(ledPins,(getBandgap()/37)*10);
     Serial.println(getBandgap());
   #endif

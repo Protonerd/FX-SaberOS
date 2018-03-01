@@ -355,7 +355,9 @@ void mainLongPressStart() {
     NextConfigState();
 #else  // SINGLEBUTTON
 //Leaving Config Mode
+#ifdef GRAVITY_COLOR // only in case of Gravity Color Mix do not allow exit config mode upon long press
   if (ConfigModeSubStates!=CS_MAINCOLOR and ConfigModeSubStates!=CS_CLASHCOLOR and ConfigModeSubStates!=CS_BLASTCOLOR) {
+#endif // GRAVITY_COLOR
     changeMenu = false;
     SaberState=S_STANDBY;
     PrevSaberState=S_CONFIG;
@@ -364,8 +366,10 @@ void mainLongPressStart() {
     #endif
     Set_Volume(storage.volume);
     delay(200);
+#ifdef GRAVITY_COLOR
   }
-#endif
+#endif // GRAVITY_COLOR
+#endif // SINGLEBUTTON
   }
 #ifdef SINGLEBUTTON
 #ifdef JUKEBOX

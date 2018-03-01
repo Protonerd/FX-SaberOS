@@ -1,7 +1,7 @@
 /*
  * Light.cpp
  *
- * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)lightClashEffect
+ * author: 		Sebastien CAPOU (neskweek@gmail.com) and Andras Kun (kun.andras@yahoo.de)
  * Source :  https://github.com/Protonerd/FX-SaberOS
  */
 #include "Light.h"
@@ -563,6 +563,11 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
             analogWrite(LED_BLUE, MAX_BRIGHTNESS); // BLUE  
           }
         }
+        else if (AState==AS_CLASH) {
+          analogWrite(LED_RED, (brightness * clashcolor.r / rgbFactor)); // RED
+          analogWrite(LED_GREEN, (brightness * clashcolor.g / rgbFactor)); // GREEN
+          analogWrite(LED_BLUE, (brightness * clashcolor.b / rgbFactor)); // BLUE            
+        }
         else {
           analogWrite(LED_RED, (brightness * maincolor.r / rgbFactor)); // RED
           analogWrite(LED_GREEN, (brightness * maincolor.g / rgbFactor)); // GREEN
@@ -572,9 +577,16 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
     case 1: // pulse flickering
       if (((millis()-lastFlicker>=PULSEDURATION/PULSEFLICKERDEPTH) and AState != AS_BLADELOCKUP) or ((millis()-lastFlicker>=2) and AState == AS_BLADELOCKUP)) {
         lastFlicker=millis();
-        analogWrite(LED_RED, ((MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.r / rgbFactor)); // RED
-        analogWrite(LED_GREEN, ((MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.g / rgbFactor)); // GREEN
-        analogWrite(LED_BLUE, ((MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.b / rgbFactor)); // BLUE  
+        if (AState==AS_CLASH) {
+          analogWrite(LED_RED, ((MAX_BRIGHTNESS - pulseflicker_pwm) * clashcolor.r / rgbFactor)); // RED
+          analogWrite(LED_GREEN, ((MAX_BRIGHTNESS - pulseflicker_pwm) * clashcolor.g / rgbFactor)); // GREEN
+          analogWrite(LED_BLUE, ((MAX_BRIGHTNESS - pulseflicker_pwm) * clashcolor.b / rgbFactor)); // BLUE  
+        }
+        else {
+          analogWrite(LED_RED, ((MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.r / rgbFactor)); // RED
+          analogWrite(LED_GREEN, ((MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.g / rgbFactor)); // GREEN
+          analogWrite(LED_BLUE, ((MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.b / rgbFactor)); // BLUE         
+        }
         if (pulsedir) {
           pulseflicker_pwm++;
         }
@@ -590,9 +602,16 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       }
       break;
     case 2: // static blade
+    if (AState==AS_CLASH) {
+      analogWrite(LED_RED, clashcolor.r ); // RED
+      analogWrite(LED_GREEN, clashcolor.g); // GREEN
+      analogWrite(LED_BLUE, clashcolor.b); // BLUE 
+    }
+    else {
       analogWrite(LED_RED, maincolor.r ); // RED
       analogWrite(LED_GREEN, maincolor.g); // GREEN
-      analogWrite(LED_BLUE, maincolor.b); // BLUE  
+      analogWrite(LED_BLUE, maincolor.b); // BLUE        
+    }
       break;      
   }
   #endif
@@ -637,7 +656,13 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
             color.g = MAX_BRIGHTNESS;
             color.b = MAX_BRIGHTNESS;
           }
-        } else {  //normal operation
+        }
+        else if (AState==AS_CLASH) {
+          color.r = brightness * clashcolor.r / rgbFactor;
+          color.g = brightness * clashcolor.g / rgbFactor;
+          color.b = brightness * clashcolor.b / rgbFactor;          
+        }
+        else {  //normal operation
           color.r = brightness * maincolor.r / rgbFactor;
           color.g = brightness * maincolor.g / rgbFactor;
           color.b = brightness * maincolor.b / rgbFactor;
@@ -653,9 +678,16 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       // pulse Flickering
         if (((millis()-lastFlicker>=PULSEDURATION/PULSEFLICKERDEPTH) and AState != AS_BLADELOCKUP) or (AState == AS_BLADELOCKUP)) {
           lastFlicker=millis();
-          color.r = (MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.r / rgbFactor;
-          color.g = (MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.g / rgbFactor;
-          color.b = (MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.b / rgbFactor;
+          if (AState==AS_CLASH) {
+            color.r = (MAX_BRIGHTNESS - pulseflicker_pwm) * clashcolor.r / rgbFactor;
+            color.g = (MAX_BRIGHTNESS - pulseflicker_pwm) * clashcolor.g / rgbFactor;
+            color.b = (MAX_BRIGHTNESS - pulseflicker_pwm) * clashcolor.b / rgbFactor;          
+          }
+          else {
+            color.r = (MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.r / rgbFactor;
+            color.g = (MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.g / rgbFactor;
+            color.b = (MAX_BRIGHTNESS - pulseflicker_pwm) * maincolor.b / rgbFactor;
+          }
           if (pulsedir) {
             pulseflicker_pwm++;
           }
@@ -884,7 +916,7 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
 void pixelblade_KillKey_Enable() {
   #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
-    #ifdef DIYINO_STARDUST
+    #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     for (uint8_t j = 0; j < 3; j++) {
     #endif
     #ifdef DIYINO_PRIME  
@@ -909,7 +941,7 @@ void pixelblade_KillKey_Enable() {
 void pixelblade_KillKey_Disable() {
   #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
-    #ifdef DIYINO_STARDUST
+    #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     for (uint8_t j = 0; j < 3; j++) {
     #endif
     #ifdef DIYINO_PRIME  
@@ -932,19 +964,19 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
     for (uint8_t i = 0; i <= 5; i++) {
       analogWrite(ledPins[i], 255);
     }
-    delay(CLASH_FX_DURATION);  // clash duration
+    //delay(CLASH_FX_DURATION);  // clash duration
   #endif
   
   #if defined STAR_LED
     getColor(color);
     lightOn(ledPins, -1, currentColor);
-    delay(CLASH_FX_DURATION);  // clash duration
+    //delay(CLASH_FX_DURATION);  // clash duration
   #endif
 
   #ifdef ADF_PIXIE_BLADE
-    //getColor(storage.sndProfile[storage.soundFont].clashColor);
-    lightOn(ledPins, -1, color);
-    delay(CLASH_FX_DURATION);  // clash duration
+    getColor(storage.sndProfile[storage.soundFont].clashColor);
+    lightOn(ledPins, -1, currentColor);
+    //delay(CLASH_FX_DURATION);  // clash duration
   #endif
   
   #if defined PIXELBLADE
@@ -960,7 +992,7 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
     else { // #else
           getColor(storage.sndProfile[storage.soundFont].clashColor);
           lightOn(ledPins, -1, currentColor);
-          delay(CLASH_FX_DURATION);  // clash duration
+          //delay(CLASH_FX_DURATION);  // clash duration
     } // #endif
   #endif
   

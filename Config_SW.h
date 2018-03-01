@@ -23,7 +23,7 @@
 #define VOL          20
 #define SOUNDFONT       3
 #define SWING         1000
-#define CLASH_THRESHOLD 10 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
+#define CLASH_THRESHOLD 15 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
 /************************************/
 
 #if defined LEDSTRINGS
@@ -74,9 +74,9 @@
  *  of their respective suppress pareameters
 
  */
-#define SWING_SUPPRESS     300
-#define CLASH_SUPRESS     200  // do not modify below 400, otherwise interlocking clash sounds can occur
-#define BLASTERBLOCK_SUPRESS     200
+#define SWING_SUPPRESS     500
+#define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
+#define BLASTERBLOCK_SUPRESS     500
 
 /*
  *  HUM_RELAUNCH will tell the state machine to relaunch
@@ -124,7 +124,7 @@
  * If you a device with a CPU wich is not
  * an Atmega328 : COMMENT THIS
  *************************************/
-//#define DEEP_SLEEP
+#define DEEP_SLEEP
 #if defined DEEP_SLEEP
   #define SLEEPYTIME      60000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
   #include <avr/sleep.h>
