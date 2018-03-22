@@ -23,7 +23,7 @@
 #define VOL          20
 #define SOUNDFONT       3
 #define SWING         1000
-#define CLASH_THRESHOLD 15 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
+#define CLASH_THRESHOLD 10 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
 /************************************/
 
 #if defined LEDSTRINGS
