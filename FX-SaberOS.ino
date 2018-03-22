@@ -570,7 +570,7 @@ void loop() {
         lightIgnition(ledPins, soundFont.getPowerOnTime(), storage.sndProfile[storage.soundFont].poweronoffType, storage.sndProfile[storage.soundFont].mainColor);
       #endif
       
-      sndSuppress = millis()-soundFont.getPowerOnTime();
+      sndSuppress = millis()+soundFont.getPowerOnTime()+1000;
       sndSuppress2 = millis();
 
     #ifdef CROSSGUARDSABER
