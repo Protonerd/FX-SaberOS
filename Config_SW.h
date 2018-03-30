@@ -126,7 +126,7 @@
  *************************************/
 #define DEEP_SLEEP
 #if defined DEEP_SLEEP
-  #define SLEEPYTIME      60000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
+  #define SLEEPYTIME (1000UL * 60 * 5) //      60000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
   #include <avr/sleep.h>
   #include <avr/power.h>
 #endif  // DEEP_SLEEP

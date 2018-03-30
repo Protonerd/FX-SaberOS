@@ -122,7 +122,7 @@
   
   #ifdef PIXELBLADE
     // How many leds in one strip?
-    #define NUMPIXELS 115  // can go up to 120, could lead to memory overflow if further increased, causing instability
+    #define NUMPIXELS 120  // can go up to 120, could lead to memory overflow if further increased, causing instability
     // For led chips like NEOPIXELs, which have a data line, ground, and power, you just
     // need to define DATA_PIN.
     #define DATA_PIN       13 // D13

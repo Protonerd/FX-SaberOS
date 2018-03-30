@@ -17,6 +17,7 @@
 #include <EEPROMex.h>
 #include <OneButton.h>
 #include <LinkedList.h>
+#include <avr/wdt.h>
   
 #include "Buttons.h"
 #include "Config_HW.h"
@@ -240,9 +241,15 @@ Serial.println(configAdress);
     }
   }
   if (CS_VOLUME > CS_LASTMEMBER) {
-    storage.volume=31;
+    storage.volume=15;
   }  
 
+  // enable watchdog to avoid system hang
+  wdt_reset();
+  wdt_enable(WDTO_8S);
+  //WDTCSR = (1<<WDCE) | (1<<WDE) | (1<<WDP3) | (1<<WDP0);
+  wdt_reset(); 
+  
 /***** LOAD CONFIG *****/
 
   /***** MP6050 MOTION DETECTOR INITIALISATION  *****/
@@ -251,6 +258,12 @@ Serial.println(configAdress);
 #if defined LS_INFO
   Serial.println(F("Initializing I2C devices..."));
 #endif
+//Serial.println("Waking up MPU - who knows, maybe it still sleeps");
+//mpu.resetI2CMaster();
+//Serial.println("Reseting MPU");
+//  mpu.reset();
+//  delay(100);
+Serial.println("Initializing MPU");
   mpu.initialize();
 
   // verify connection
@@ -506,14 +519,15 @@ Serial.println(configAdress);
   #ifdef DEEP_SLEEP
     sleepTimer = millis();
   #endif
-  //Disable_MP3(true);  // disable the MP3 in Stand-by mode to enable FTDI communication
-
 }
 
 // ====================================================================================
 // ===               	   			LOOP ROUTINE  	 	                			===
 // ====================================================================================
 void loop() {
+
+  // pat the dog
+  wdt_reset(); // do not remove!!!
 
   // if MPU6050 DMP programming failed, don't try to do anything : EPIC FAIL !
   if (!dmpReady) {
@@ -1048,7 +1062,7 @@ void loop() {
 #endif
 
     accentLEDControl(AL_ON);
-    #if defined DEEP_SLEEP and (SLEEPYTIME>5000 and SLEEPYTIME<65000)
+    #if defined DEEP_SLEEP and SLEEPYTIME>5000
       if (millis() - sleepTimer > SLEEPYTIME) { // after the defined max idle time SLEEPYTIME automatically go to sleep mode
         SaberState=S_SLEEP;
         PrevSaberState=S_STANDBY;
@@ -1117,10 +1131,11 @@ void loop() {
       ADCSRA = 0;  // reduces another ~100uA!
       // turns accent LED Off
       accentLEDControl(AL_OFF);
+      // disable watchdog before going into sleep mode
+      wdt_disable(); // do not remove!!!
       SleepModeEntry();
 
       // .. and the code will continue from here
-
       SleepModeExit();
       SaberState = S_STANDBY;
       PrevSaberState = S_SLEEP;
@@ -1440,16 +1455,19 @@ void sleepNow()         // here we put the arduino to sleep
     //PCMSK0 |= bit (PCINT4);    // enable pin change interrupt pin 12 Main button
     //delay(300);
     //enableInterrupt(12, SleepModeExit, CHANGE);
-  
+    
     sleep_mode();            // here the device is actually put to sleep!!
                              // THE PROGRAM CONTINUES FROM HERE AFTER WAKING UP
 
+
+  
     sleep_disable();         // first thing after waking from sleep:
                              // disable sleep...
     detachInterrupt(0);      // disables interrupt 0 on pin 2 so the 
                              // wakeUpNow code will not be executed 
                              // during normal running time.
 
+                             // enable watchdog to avoid system hang
 }
 
 void SleepModeEntry() {
@@ -1479,16 +1497,32 @@ void SleepModeExit() {
   // cancel sleep as a precaution
   sleep_disable();
   power_all_enable ();   // enable modules again
-  //digitalWrite(11,HIGH);
   Disable_FTDI(false);
-  //mpu.setSleepEnabled(false);
-  //delay (300);
   Disable_MP3(false);
-  //digitalWrite(11,LOW);
   pinMode(DFPLAYER_RX, OUTPUT);
   pinMode(DFPLAYER_TX, INPUT);
-  //delay (300);
+  
+  // enable watchdog to avoid system hang
+  wdt_reset();
+  wdt_enable(WDTO_8S);
+  //WDTCSR = (1<<WDCE) | (1<<WDE) | (1<<WDP3) | (1<<WDP0);
+  wdt_reset(); 
   //digitalWrite(11,HIGH);
+  //delay(1000);
+  //digitalWrite(11,LOW);
+  // MPU init after wake up to avoid system hang
+  /*
+  delay(300);
+  Serial.println("Waking up MPU - who knows, maybe it still sleeps");
+  mpu.setSleepEnabled(false);
+  Serial.println("Reset MPU I2C Master");
+mpu.resetI2CMaster();
+Serial.println("Reseting MPU");
+  mpu.reset();
+  delay(100);
+Serial.println("Initializing MPU");
+  mpu.initialize();
+  */
   setup(); // redo all initializations
 }
 
@@ -1499,12 +1533,10 @@ void Disable_FTDI(bool ftdi_off) {
 
   if (ftdi_off) {  //  disable FTDI
     digitalWrite(FTDI_PSWITCH, HIGH); // disable the FTDI chip
-    //delay (800);  // cut power to FTDI, this delay is needed, the sleep
-                  //function will provoke a Serial error otherwise!!
+
   }
   else {  //  enable ftdi
     digitalWrite(FTDI_PSWITCH, LOW); // enable the FTDI chip
-    //delay (800);    
   }
   
 }
@@ -1513,11 +1545,9 @@ void Disable_MP3(bool mp3_off) {
 
   if (mp3_off) {  //  disable MP3
     digitalWrite(MP3_PSWITCH, HIGH); // disable the MP3 chip and the audio amp
-    //delay (300);
   }
   else {  //  enable MP3
     digitalWrite(MP3_PSWITCH, LOW); // enable the MP3 chip and the audio amp
-    //delay (300);    
   }
   
 }
