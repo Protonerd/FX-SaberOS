@@ -9,7 +9,7 @@
 #include "Config_HW.h"
 #include "Config_SW.h"
 #include "Light.h"
-#include "SoundFont.h"
+#include "Soundfont.h"
 
 
 // global Saber state and Sub State variables
@@ -92,9 +92,9 @@ void NextConfigState(){
   if (ConfigModeSubStates!=CS_MAINCOLOR and ConfigModeSubStates!=CS_CLASHCOLOR and ConfigModeSubStates!=CS_BLASTCOLOR) {  
     lightOff();
   }
-  ConfigModeSubStates=ConfigModeSubStates+1; // change to next config state in the ordered list
+  ConfigModeSubStates=static_cast<ConfigModeSubStatesEnum>(ConfigModeSubStates+1); // change to next config state in the ordered list
   if (ConfigModeSubStates== CS_LASTMEMBER) {
-    ConfigModeSubStates=0; // after the last config menu item go back to the first
+    ConfigModeSubStates=static_cast<ConfigModeSubStatesEnum>(0); // after the last config menu item go back to the first
   }
 
   Serial.println(ConfigModeSubStates);
@@ -112,7 +112,8 @@ void NextConfigState(){
         #endif  
         ConfigModeSubStates=CS_VOLUME;
         BladeMeter(ledPins, storage.volume*100/30);
-        SinglePlay_Sound(4);
+        AccentMeter(storage.volume*100/30);
+          SinglePlay_Sound(4);
         delay(500);
         break;
       case CS_SOUNDFONT: 

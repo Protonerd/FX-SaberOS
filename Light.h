@@ -16,18 +16,6 @@
 
 enum AccentLedAction_En {AL_PULSE, AL_ON, AL_OFF};
 
-#if defined ACCENT_LED
-#if defined SOFT_ACCENT
-
-struct softPWM {
-  uint8_t dutyCycle; // in percent
-  bool revertCycle;
-  uint8_t state;
-  uint16_t tick;
-} pwmPin = { 100, false, LOW, 0 };
-#endif
-#endif
-
 
 // ====================================================================================
 // ===              	    			LED FUNCTIONS		                		===
@@ -72,7 +60,11 @@ uint8_t DominantMainColor(cRGB color={0,0,0});
 #endif
 
 void accentLEDControl(AccentLedAction_En AccentLedAction);
-void PWM();
+//void PWM();
+#ifdef PIXEL_ACCENT
+  void pixelAccentUpdate();
+  void AccentMeter (int MeterLevel);
+#endif
 #endif /* LIGHT_H_ */
 
 

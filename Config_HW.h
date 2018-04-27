@@ -21,9 +21,9 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-//#define DIYINO_PRIME // including home-brew
+#define DIYINO_PRIME // including home-brew
 //#define DIYINO_STARDUST_V2
-#define DIYINO_STARDUST_V3
+//#define DIYINO_STARDUST_V3
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -37,7 +37,7 @@
 // If your saber has only a single button to interact with the electronics, uncomment the next line
 // in case you have 2 buttons (referred to as main and aux buttons) leave this line commented out
 
-#define SINGLEBUTTON
+//#define SINGLEBUTTON
  
 #ifdef DIYINO_PRIME 
   #define MAIN_BUTTON     12
@@ -61,8 +61,8 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-#define STAR_LED
-//#define PIXELBLADE
+//#define STAR_LED
+#define PIXELBLADE
 //#define ADF_PIXIE_BLADE
 
 /************************************/
@@ -170,9 +170,13 @@
  * a button accent led
  *************************************/
 #ifdef DIYINO_PRIME
-  #define ACCENT_LED 14 //A0
+  #ifdef HARD_ACCENT
+    #define ACCENT_LED 14 //A0
+  #endif
 #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
-  #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
+  #ifdef HARD_ACCENT
+    #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
+  #endif
 #endif
 /*
  * MP3 chips YX5200 or YX6300 Tx and Rx ins, as well as the ADC pins connected to the SPK terminals for AudioTracker

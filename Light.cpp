@@ -8,7 +8,7 @@
 #include "Config_HW.h"
 #include "Config_SW.h"
 #include "ConfigMenu.h"
-#include "SoundFont.h"
+#include "Soundfont.h"
 
 #if defined PIXELBLADE
 #include <WS2812.h>
@@ -23,6 +23,9 @@ extern ConfigModeSubStatesEnum ConfigModeSubStates;
 extern ActionModeSubStatesEnum PrevActionModeSubStates;
 extern ConfigModeSubStatesEnum PrevConfigModeSubStates;
 //extern SubStateEnum SubState;
+
+extern bool lockuponclash;
+extern int8_t modification;
 
 extern struct StoreStruct {
   // This is for mere detection if they are our settings
@@ -42,13 +45,9 @@ extern struct StoreStruct {
 
 extern SoundFont soundFont;
 extern uint8_t ledPins[];
-# if defined ACCENT_LED
+//#ifdef ACCENT_LED
   unsigned long lastAccent = millis();
-#endif
-#if defined SOFT_ACCENT
-  unsigned long lastAccentTick = micros();
-#endif
-
+//#endif
 
 #ifdef JUKEBOX
 #define SAMPLESIZEAVERAGE 30
@@ -60,19 +59,19 @@ bool fireblade=false;
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 50, suggested range 20-100 
-static uint8_t Fire_Cooling = 50;
+static uint8_t Fire_Cooling = 100;//50;
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
 // Higher chance = more roaring fire.  Lower chance = more flickery fire.
 // Default 120, suggested range 50-200.
-static uint8_t Fire_Sparking = 100;
+static uint8_t Fire_Sparking = 50;//100;
 //#ifdef CROSSGUARDSABER
 //static byte heat[MN_STRIPE];  
 //static byte heat_cg[CG_STRIPE];
 //#else
 static byte heat[NUMPIXELS];  
 //#endif
-#define PIXELSTEP 5// how many pixel to treat as a group to save on processing capability
+#define PIXELSTEP 10//5// how many pixel to treat as a group to save on processing capability
 #endif  // PIXELBLADE
 
 
@@ -90,6 +89,9 @@ static uint8_t flickerPos = 0;
 static long lastFlicker = millis();
 #if defined PIXELBLADE
   extern WS2812 pixels;
+#endif
+#ifdef PIXEL_ACCENT
+  extern WS2812 accentPixels;
 #endif
 
 #if defined STAR_LED or defined PIXELBLADE or defined ADF_PIXIE_BLADE
@@ -711,13 +713,13 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       case 2: // fire blade red
         if (fireblade) { // #ifdef FIREBLADE
         
-          if (AState==AS_BLADELOCKUP) {
-            Fire_Cooling=150;
-            Fire_Sparking=50;
+          if (AState == AS_BLADELOCKUP) {
+            Fire_Cooling = 35;//150;
+            Fire_Sparking = 85;//50;
           }
           else {
-            Fire_Cooling=50;
-            Fire_Sparking=100;  
+            Fire_Cooling = 60;//50;
+            Fire_Sparking = 75;//100;
           }
             FireBlade(0);
             pixels.sync(); // Sends the data to the LEDs
@@ -1525,12 +1527,12 @@ colorProfiles[4].g=100;
 colorProfiles[4].b=255;
 }
 #endif
-#if defined ACCENT_LED
 
+
+//#if defined ACCENT_LED
 void accentLEDControl( AccentLedAction_En AccentLedAction) {
-
+#ifdef HARD_ACCENT
   if (AccentLedAction==AL_PULSE) {
-    #if defined HARD_ACCENT
         if (millis() - lastAccent <= 400) {
           analogWrite(ACCENT_LED, millis() - lastAccent);
         } else if (millis() - lastAccent > 400
@@ -1539,18 +1541,6 @@ void accentLEDControl( AccentLedAction_En AccentLedAction) {
         } else {
           lastAccent = millis();
         }
-    #endif
-    
-    #if defined SOFT_ACCENT
-    
-        PWM();
-    
-        if (millis() - lastAccent >= 20) {
-          // moved to own funciton for clarity
-          fadeAccent();
-          lastAccent = millis();
-        }
-    #endif
   }
   else if (AccentLedAction==AL_ON) {
     digitalWrite(ACCENT_LED,HIGH);
@@ -1558,46 +1548,62 @@ void accentLEDControl( AccentLedAction_En AccentLedAction) {
   else {  // AL_OFF
     digitalWrite(ACCENT_LED,LOW);    
   }
+#endif
 }
+//#endif
 
-#if defined SOFT_ACCENT
-
-void PWM() {
-
-  if (micros() - lastAccentTick >= 8) {
-
-    if (pwmPin.state == LOW) {
-      if (pwmPin.tick >= pwmPin.dutyCycle) {
-        pwmPin.state = HIGH;
-      }
-    } else {
-      if (pwmPin.tick >= abs(100 - pwmPin.dutyCycle)) {
-        pwmPin.state = LOW;
-        pwmPin.tick = 0;
-      }
+void AccentMeter (int MeterLevel) {
+  #ifdef PIXEL_ACCENT
+  if (NUM_ACCENT_PIXELS < 3){
+    for (int i=0; i<=NUM_ACCENT_PIXELS; i++) {
+        accentPixels.set_crgb_at(i, {PIXEL_ACCENT_BRIGHTNESS * (100 - MeterLevel) / 100,PIXEL_ACCENT_BRIGHTNESS * MeterLevel / 100,0});
     }
-    pwmPin.tick++;
-    digitalWrite(ACCENT_LED, pwmPin.state);
-    lastAccentTick = micros();
   }
+  accentPixels.sync();
+  #endif    
 }
 
-void fadeAccent() {
-  // go through each sw pwm pin, and increase
-  // the pwm value. this would be like
-  // calling analogWrite() on each hw pwm pin
-  if (not pwmPin.revertCycle) {
-    pwmPin.dutyCycle++;
-    if (pwmPin.dutyCycle == 100)
-      pwmPin.revertCycle = true;
+#ifdef PIXEL_ACCENT
+void pixelAccentUpdate() { 
+
+  if (millis() - lastAccent > 900) lastAccent = millis();
+  int tB = PIXEL_ACCENT_BRIGHTNESS;
+  if (SaberState == S_STANDBY) tB = tB * (millis() - lastAccent) / 900;
+  if (SaberState == S_SLEEP) tB = 0;
+  if (SaberState == S_CONFIG) {
+    if (ConfigModeSubStates == CS_SOUNDFONT) {
+      accentPixels.set_crgb_at(0, {storage.sndProfile[storage.soundFont].mainColor.r*tB / 255, storage.sndProfile[storage.soundFont].mainColor.g*tB / 255, storage.sndProfile[storage.soundFont].mainColor.b*tB / 255}); //{tB,tB,tB});//
+    } else if (ConfigModeSubStates == CS_SOUNDFONT || ConfigModeSubStates == CS_MAINCOLOR || ConfigModeSubStates == CS_CLASHCOLOR || ConfigModeSubStates == CS_BLASTCOLOR) {
+      switch (modification) {
+        case (0): // red +
+          accentPixels.set_crgb_at(0, {tB, 0, 0});
+          break;
+        case (1): // red -
+          accentPixels.set_crgb_at(0, {tB / 4, 0, 0});
+          break;
+        case (2): // green +
+          accentPixels.set_crgb_at(0, {0, tB, 0});
+          break;
+        case (3): // green -
+          accentPixels.set_crgb_at(0, {0, tB / 4, 0});
+          break;
+        case (4): // blue +
+          accentPixels.set_crgb_at(0, {0, 0, tB});
+          break;
+        case (5): // blue -
+          accentPixels.set_crgb_at(0, {0, 0, tB / 4});
+          break;
+      }
+    } else if (ConfigModeSubStates == CS_BATTERYLEVEL || ConfigModeSubStates == CS_VOLUME || ConfigModeSubStates == CS_SWINGSENSITIVITY){
+    } else {
+      accentPixels.set_crgb_at(0, {storage.sndProfile[storage.soundFont].mainColor.r*tB / 255, storage.sndProfile[storage.soundFont].mainColor.g*tB / 255, storage.sndProfile[storage.soundFont].mainColor.b*tB / 255}); //{tB,tB,tB});//
+    }
   } else {
-    pwmPin.dutyCycle--;
-    if (pwmPin.dutyCycle == 0)
-      pwmPin.revertCycle = false;
+    accentPixels.set_crgb_at(0, {storage.sndProfile[storage.soundFont].mainColor.r*tB / 255, storage.sndProfile[storage.soundFont].mainColor.g*tB / 255, storage.sndProfile[storage.soundFont].mainColor.b*tB / 255}); //{tB,tB,tB});//
+    if (ActionModeSubStates == AS_BLASTERDEFLECTMOTION && (millis() - lastAccent > 300) && (millis() - lastAccent <= 600)) accentPixels.set_crgb_at(0, {storage.sndProfile[storage.soundFont].blasterboltColor.r*tB / 255, storage.sndProfile[storage.soundFont].blasterboltColor.g*tB / 255, storage.sndProfile[storage.soundFont].blasterboltColor.b*tB / 255}); //{tB,tB,tB});//
+    if (lockuponclash && (millis() - lastAccent >= 600)) accentPixels.set_crgb_at(0, {storage.sndProfile[storage.soundFont].clashColor.r*tB / 255, storage.sndProfile[storage.soundFont].clashColor.g*tB / 255, storage.sndProfile[storage.soundFont].clashColor.b*tB / 255}); //{tB,tB,tB});//
   }
+  
+  accentPixels.sync();
 }
-#endif
-#endif
-
-
-
+#endif    

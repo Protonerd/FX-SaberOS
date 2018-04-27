@@ -10,7 +10,7 @@
 #include "Buttons.h"
 #include "Config_HW.h"
 #include "Config_SW.h"
-#include "SoundFont.h"
+#include "Soundfont.h"
 #include "Light.h"
 #include "ConfigMenu.h"
 
@@ -92,6 +92,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       confParseValue(storage.volume, 5, 30, 1*incrementSign);
       storage.volume = value;
       BladeMeter(ledPins, value*100/30);
+      AccentMeter(storage.volume*100/30);
       Set_Volume(storage.volume);
       #if defined LS_INFO
               Serial.println(storage.volume);
@@ -195,21 +196,6 @@ void mainClick() {
 	Serial.println(F("Main button click."));
 #endif
 	if (SaberState==S_SABERON) {
-    /*
-    if (lockuponclash) {
-      HumRelaunch();
-      ActionModeSubStates = AS_HUM;
-      lockuponclash=false;
-      #if defined LS_BUTTON_DEBUG
-            Serial.println(F("End clash triggered lockup (either pre or active phase)"));
-      #endif  
-    }
-    else {
-      lockuponclash=true;
-#if defined LS_BUTTON_DEBUG
-      Serial.println(F("Start clash triggered lockup (either pre or active phase)"));
-#endif 
-    }*/
     #if defined LS_BUTTON_DEBUG
       Serial.println(F("Start motion triggered blaster bolt deflect"));
     #endif
@@ -298,25 +284,21 @@ void mainDoubleClick() {
 #endif
 #ifdef SINGLEBUTTON
 	if (SaberState==S_SABERON) {
-		//ACTION TO DEFINE
-    #if defined LS_BUTTON_DEBUG
-      Serial.println(F("Start motion triggered blaster bolt deflect"));
-    #endif
-    if (ActionModeSubStates!=AS_BLASTERDEFLECTMOTION) { // start motion triggered blaster deflect
-      ActionModeSubStates=AS_BLASTERDEFLECTMOTION;
-      #if defined LS_BUTTON_DEBUG
-            Serial.println(F("Start motion triggered blaster bolt deflect"));
-      #endif
-    }
-    else { // stop motion triggered blaster deflect
-      #if defined LS_BUTTON_DEBUG
-            Serial.println(F("End motion triggered blaster bolt deflect"));
-      #endif
+    if (lockuponclash) {
       HumRelaunch();
-      ActionModeSubStates=AS_HUM;
-      accentLEDControl(AL_ON);
-    }    
-} else if (SaberState==S_CONFIG) {
+      ActionModeSubStates = AS_HUM;
+      lockuponclash=false;
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("End clash triggered lockup (either pre or active phase)"));
+      #endif  
+    }
+    else {
+      lockuponclash=true;
+#if defined LS_BUTTON_DEBUG
+      Serial.println(F("Start clash triggered lockup (either pre or active phase)"));
+#endif 
+    }
+  } else if (SaberState==S_CONFIG) {
 // Change Menu
     NextConfigState();
   }
@@ -349,6 +331,7 @@ void mainLongPressStart() {
     ActionModeSubStates=AS_RETRACTION;
     SaberState=S_STANDBY;
     PrevSaberState=S_SABERON;
+    lockuponclash = false;
 	} else if (SaberState==S_CONFIG) {
 #ifndef SINGLEBUTTON
 // Change Menu
@@ -471,18 +454,19 @@ void lockupDoubleClick() {
     #if defined LS_BUTTON_DEBUG
       Serial.println(F("Start motion triggered blaster bolt deflect"));
     #endif
-    if (ActionModeSubStates!=AS_BLASTERDEFLECTMOTION) { // start motion triggered blaster deflect
-      ActionModeSubStates=AS_BLASTERDEFLECTMOTION;
-      #if defined LS_BUTTON_DEBUG
-            Serial.println(F("Start motion triggered blaster bolt deflect"));
-      #endif
-    }
-    else { // stop motion triggered blaster deflect
-      #if defined LS_BUTTON_DEBUG
-            Serial.println(F("End motion triggered blaster bolt deflect"));
-      #endif
+    if (lockuponclash) {
       HumRelaunch();
-      ActionModeSubStates=AS_HUM;
+      ActionModeSubStates = AS_HUM;
+      lockuponclash=false;
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("End clash triggered lockup (either pre or active phase)"));
+      #endif  
+    }
+    else {
+      lockuponclash=true;
+#if defined LS_BUTTON_DEBUG
+      Serial.println(F("Start clash triggered lockup (either pre or active phase)"));
+#endif 
     }
 	} 
 #ifdef JUKEBOX 
