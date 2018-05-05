@@ -113,7 +113,7 @@ void NextConfigState(){
         ConfigModeSubStates=CS_VOLUME;
         BladeMeter(ledPins, storage.volume*100/30);
         AccentMeter(storage.volume*100/30);
-        SinglePlay_Sound(4);
+          SinglePlay_Sound(4);
         delay(500);
         break;
       case CS_SOUNDFONT: 

@@ -76,7 +76,7 @@
  */
 #define SWING_SUPPRESS     500
 #define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
-#define BLASTERBLOCK_SUPRESS     300
+#define BLASTERBLOCK_SUPRESS     500
 
 /*
  *  HUM_RELAUNCH will tell the state machine to relaunch
