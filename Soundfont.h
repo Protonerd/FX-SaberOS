@@ -68,6 +68,7 @@ void setID(uint16_t id) {
 
     switch (id) {
   #if defined DIYINO_PRIME or defined DIYINO_STARDUST_V3
+    default:
     case 0:
       // soundFont directory 01 :
       this->powerOnTime = 800;
@@ -94,6 +95,7 @@ void setID(uint16_t id) {
       this->powerOffTime = 1500;
       break;
   #else if DIYINO_STARDUST_V2
+    default:
     case 0:
       // soundFont directory 01 :
       this->powerOnTime = 1000;

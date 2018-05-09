@@ -20,7 +20,7 @@
  *************************************/
 // memory base in EEPROM for configuration variables, i.e. the config block will start at EEPROM address 32
 #define MEMORYBASE       32
-#define VOL          20
+#define VOL          31
 #define SOUNDFONT       3
 #define SWING         1000
 #define CLASH_THRESHOLD 10 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
@@ -91,7 +91,7 @@
 #define BLASTER_FX_DURATION 150
 #define SWING_FX_DURATION 400
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration
-//#define SWING_QUATERNION
+#define SWING_QUATERNION
 
 /*
  * BUTTONS PARAMETERS
@@ -126,7 +126,7 @@
  *************************************/
 #define DEEP_SLEEP
 #if defined DEEP_SLEEP
-  #define SLEEPYTIME (1000UL * 60 * 5) //      60000 //20 secs, after which the board will automatically go to sleep mode (to be implemented)
+  #define SLEEPYTIME      (1000UL * 60 * 2) //2 mins, after which the board will automatically go to sleep mode (to be implemented)
   #include <avr/sleep.h>
   #include <avr/power.h>
 #endif  // DEEP_SLEEP
@@ -153,7 +153,9 @@
 
 /***** Battery meter settings *****/
 const long InternalReferenceVoltage = 1062;  // Adjust this value to your board's specific internal BG voltage
-#define BATTERY_FACTOR 5 // Callibration value to compensate for component variation
+// To calculate BATTERY_FACTOR use a multimeter: actual voltage / reported voltage * current BATTERY_FACTOR
+// BATTERY_FACTOR will be about about 6.4-6.5 for "homebrew" builds
+#define BATTERY_FACTOR 6.43 // Callibration value to compensate for component variation 
 #define LOW_BATTERY 3.3 // low voltage for battery, a 5v Arduino or DIYino requires 3.3v 
 #define FULL_BATTERY 4.15 // full voltage for battery, nominally 4.2 for a 3.7v battery
 //cRGB C1;  //Low meter color
@@ -165,12 +167,19 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
  * The pin definition for the button LED can be found in hardware config tab
  */
 /*
- * Soft or Had PWM for Accent
+ * Pixel or Hard Accent
  */
-//#define SOFT_ACCENT
-#if not defined SOFT_ACCENT
-  #define HARD_ACCENT
+ 
+//#define PIXEL_ACCENT
+#if not defined HARD_ACCENT
+  #define PIXEL_ACCENT
 #endif
+
+#ifdef PIXEL_ACCENT
+  #define NUM_ACCENT_PIXELS 1
+  #define PIXEL_ACCENT_DATA 14 //A0
+  #define PIXEL_ACCENT_BRIGHTNESS 255
+#endif  
 /*
  * DEBUG PARAMETERS
  */

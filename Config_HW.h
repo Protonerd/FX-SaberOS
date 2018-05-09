@@ -7,7 +7,6 @@
  * This tab contains all settings necessary to define your saber board's electronic hardware configuration
  */
 
-
 #if not defined CONFIG_HW_H_
 #define CONFIG_HW_H_
 
@@ -122,7 +121,7 @@
   
   #ifdef PIXELBLADE
     // How many leds in one strip?
-    #define NUMPIXELS 120  // can go up to 120, could lead to memory overflow if further increased, causing instability
+    #define NUMPIXELS 115  // can go up to 120, could lead to memory overflow if further increased, causing instability
     // For led chips like NEOPIXELs, which have a data line, ground, and power, you just
     // need to define DATA_PIN.
     #define DATA_PIN       13 // D13
@@ -169,10 +168,15 @@
  * Enable/disable management of
  * a button accent led
  *************************************/
+#define HARD_ACCENT
 #ifdef DIYINO_PRIME
-  #define ACCENT_LED 14 //A0
+  #ifdef HARD_ACCENT
+    #define ACCENT_LED 14 //A0
+  #endif
 #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
-  #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
+  #ifdef HARD_ACCENT
+    #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
+  #endif
 #endif
 /*
  * MP3 chips YX5200 or YX6300 Tx and Rx ins, as well as the ADC pins connected to the SPK terminals for AudioTracker
