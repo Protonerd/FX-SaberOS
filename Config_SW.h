@@ -66,8 +66,8 @@
  * or by polling the INT_STATUS register via I2C and determining the value (-> CLASH_DET_MPU_POLL)
  * of bit 6
  */
-#define CLASH_DET_MPU_INT
-//#define CLASH_DET_MPU_POLL
+//#define CLASH_DET_MPU_INT
+#define CLASH_DET_MPU_POLL
  
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
