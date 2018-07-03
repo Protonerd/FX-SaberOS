@@ -3,9 +3,12 @@
 # FX-SaberOS
 System code for Arduino based Lightsaber replicas for DIYino family boards and Arduino based home brew systems.
 
-This repository is currently in development.  The currently posted builds should be fully functional, but are undergoing rapid changes and there will likely be big changes in the versions prior to the official release. Please check back soon!
+This repository is currently in development.  The currently posted builds should be fully functional, but are ocassional updates and changes.  Please review the Config files for build notes prior to deployment.
 
 Installation and configuration instructions are available in the Wiki https://github.com/Protonerd/FX-SaberOS/wiki
 
 For Discussion, FAQ and Troubleshooting please visit the Open Saber forum http://opensaber.proboards.com or join us on Facebook at https://www.facebook.com/groups/FXSaberOS/
 
+## Recent Important Changes:
+There are now two clash methods.  The original "POLL" method, and a new "INT" method which is less intensive but requires attaching INT on the MPU6050 to D2 of the controller board.
+https://github.com/Protonerd/FX-SaberOS/wiki/Clash-Method
