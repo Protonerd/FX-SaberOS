@@ -7,4 +7,5 @@ This repository is currently in development.  The currently posted builds should
 
 Installation and configuration instructions are available in the Wiki https://github.com/Protonerd/FX-SaberOS/wiki
 
-Please share your projects and join the discussion ot the Open Saber forum http://opensaber.proboards.com or join us on Facebook at https://www.facebook.com/groups/FXSaberOS/
+For Discussion, FAQ and Troubleshooting please visit the Open Saber forum http://opensaber.proboards.com or join us on Facebook at https://www.facebook.com/groups/FXSaberOS/
+
