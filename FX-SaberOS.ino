@@ -179,6 +179,9 @@ inline void printAcceleration(VectorInt16 aaWorld);
 void setup() {
   #ifdef PIXEL_ACCENT
     accentPixels.setOutput(PIXEL_ACCENT_DATA);
+    #ifdef SWAP_PIXEL_RG
+      accentPixels.setColorOrderRGB();
+    #endif
   #endif
 	// join I2C bus (I2Cdev library doesn't do this automatically)
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
