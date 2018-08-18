@@ -171,14 +171,15 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
  */
  
 //#define PIXEL_ACCENT
-#if not defined HARD_ACCENT
-  #define PIXEL_ACCENT
+#ifndef PIXEL_ACCENT
+  #define HARD_ACCENT
 #endif
 
 #ifdef PIXEL_ACCENT
   #define NUM_ACCENT_PIXELS 1
   #define PIXEL_ACCENT_DATA 14 //A0
   #define PIXEL_ACCENT_BRIGHTNESS 255
+//  #define SWAP_PIXEL_RG //define if Red and Green are swapped from the color order of your blade (for example if one is 5mm bulb and other is 5050 SMD)
 #endif  
 /*
  * DEBUG PARAMETERS
