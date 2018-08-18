@@ -179,7 +179,7 @@ inline void printAcceleration(VectorInt16 aaWorld);
 void setup() {
   #ifdef PIXEL_ACCENT
     accentPixels.setOutput(PIXEL_ACCENT_DATA);
-    #ifdef SWAP_PIXEL_RG
+    #ifdef ACCENT_SWAP_RG
       accentPixels.setColorOrderRGB();
     #endif
   #endif
