@@ -90,7 +90,7 @@ void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
 
 void NextConfigState(){
   if (ConfigModeSubStates!=CS_MAINCOLOR and ConfigModeSubStates!=CS_CLASHCOLOR and ConfigModeSubStates!=CS_BLASTCOLOR) {  
-    lightOff();
+    lightOff(ledPins, -1);
   }
   ConfigModeSubStates=static_cast<ConfigModeSubStatesEnum>(ConfigModeSubStates+1); // change to next config state in the ordered list
   if (ConfigModeSubStates== CS_LASTMEMBER) {
@@ -120,7 +120,7 @@ void NextConfigState(){
         #if defined LS_FSM
           Serial.print(F("Sound font"));
         #endif        
-        lightOff();
+        lightOff(ledPins, -1);
         SinglePlay_Sound(5);
         delay(600);
         SinglePlay_Sound(soundFont.getMenu((storage.soundFont)*NR_FILE_SF));

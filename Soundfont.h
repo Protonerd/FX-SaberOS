@@ -71,18 +71,18 @@ void setID(uint16_t id) {
     default:
     case 0:
       // soundFont directory 01 :
-      this->powerOnTime = 800;
-      this->powerOffTime = 800;
+      this->powerOnTime = 300;
+      this->powerOffTime = 300;
       break;
     case 1:
       // soundFont directory 02 :
-      this->powerOnTime = 1050;
+      this->powerOnTime = 700;
       this->powerOffTime = 900;
       break;
     case 2:
       // soundFont directory 03 :
-      this->powerOnTime = 1200;
-      this->powerOffTime = 1200;
+      this->powerOnTime = 500;
+      this->powerOffTime = 500;
       break;
     case 3:
       // soundFont directory 04 :
@@ -98,19 +98,19 @@ void setID(uint16_t id) {
     default:
     case 0:
       // soundFont directory 01 :
-      this->powerOnTime = 1000;
-      this->powerOffTime = 1400;
+      this->powerOnTime = 300;
+      this->powerOffTime = 300;
       break;
     case 1:
       // soundFont directory 02 :
-      this->powerOnTime = 500;
-      this->powerOffTime = 700;
+      this->powerOnTime = 700;
+      this->powerOffTime = 900;
       break;
     case 2:
       // soundFont directory 03 :
-      this->powerOnTime = 1000;
-      this->powerOffTime = 900;
-      break;  
+      this->powerOnTime = 500;
+      this->powerOffTime = 500;
+      break;
   #endif // DIYINO_PRIME
     }
 }

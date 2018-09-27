@@ -65,6 +65,7 @@ extern void Disable_MP3(bool mp3_off);
 extern void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
     short int multiplier);
 extern uint8_t GravityVector();
+extern void FX_BlasterBlock();
 
 extern struct StoreStruct {
   // This is for mere detection if they are our settings
@@ -89,10 +90,10 @@ extern bool fireblade;
 
 void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonActionType, int8_t incrementSign=1){
     if (ConfigModeSubStates == CS_VOLUME and ButtonActionType==SINGLE_CLICK) {
-      confParseValue(storage.volume, 5, 30, 1*incrementSign);
+      play = true;
+      confParseValue(storage.volume, 0, 30, 1*incrementSign);
       storage.volume = value;
       BladeMeter(ledPins, value*100/30);
-      AccentMeter(storage.volume*100/30);
       Set_Volume(storage.volume);
       #if defined LS_INFO
               Serial.println(storage.volume);
@@ -103,6 +104,10 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       confParseValue(storage.soundFont, 0, SOUNDFONT_QUANTITY - 1, 1*incrementSign);
       storage.soundFont = value;
       soundFont.setID(value);
+      #if defined PIXELBLADE
+        if (storage.sndProfile[storage.soundFont].flickerType==2 or storage.sndProfile[storage.soundFont].flickerType==3 or storage.sndProfile[storage.soundFont].flickerType==4) {fireblade=true;}
+        else {fireblade=false;}
+      #endif
       SinglePlay_Sound(soundFont.getMenu((storage.soundFont)*NR_FILE_SF));
       //Serial.print("soundfont   "); Serial.print(storage.soundFont); Serial.print("  Offset:   ");Serial.println(soundFont.getMenu((storage.soundFont)*NR_FILE_SF));
       delay(150);    
@@ -199,19 +204,28 @@ void mainClick() {
     #if defined LS_BUTTON_DEBUG
       Serial.println(F("Start motion triggered blaster bolt deflect"));
     #endif
-    if (ActionModeSubStates!=AS_BLASTERDEFLECTMOTION) { // start motion triggered blaster deflect
+    if (ActionModeSubStates==AS_HUM) { // start motion triggered blaster deflect
       ActionModeSubStates=AS_BLASTERDEFLECTMOTION;
       #if defined LS_BUTTON_DEBUG
             Serial.println(F("Start motion triggered blaster bolt deflect"));
       #endif
-    }
-    else { // stop motion triggered blaster deflect
+       FX_BlasterBlock();
+   }
+    else if (ActionModeSubStates==AS_BLASTERDEFLECTMOTION) { // stop motion triggered blaster deflect
       #if defined LS_BUTTON_DEBUG
             Serial.println(F("End motion triggered blaster bolt deflect"));
       #endif
       HumRelaunch();
       ActionModeSubStates=AS_HUM;
       accentLEDControl(AL_ON);
+    }
+    if (lockuponclash) {
+      HumRelaunch();
+      ActionModeSubStates = AS_HUM;
+      lockuponclash=false;
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("End clash triggered lockup (either pre or active phase)"));
+      #endif  
     } 
   }
 	else if (SaberState==S_CONFIG) {
@@ -292,7 +306,7 @@ void mainDoubleClick() {
             Serial.println(F("End clash triggered lockup (either pre or active phase)"));
       #endif  
     }
-    else {
+    else if (ActionModeSubStates == AS_HUM) {
       lockuponclash=true;
 #if defined LS_BUTTON_DEBUG
       Serial.println(F("Start clash triggered lockup (either pre or active phase)"));
@@ -335,7 +349,7 @@ void mainLongPressStart() {
 	} else if (SaberState==S_CONFIG) {
 #ifndef SINGLEBUTTON
 // Change Menu
-    NextConfigState();
+  NextConfigState();
 #else  // SINGLEBUTTON
 //Leaving Config Mode
 #ifdef GRAVITY_COLOR // only in case of Gravity Color Mix do not allow exit config mode upon long press
@@ -504,9 +518,6 @@ void lockupLongPressStart() {
     		//	repeat = true;
         SaberState=S_STANDBY;
         PrevSaberState=S_CONFIG;
-        #ifdef PIXELBLADE
-          pixelblade_KillKey_Disable();
-        #endif
         Set_Volume(storage.volume);
         delay(200);      }
 	} else if (SaberState==S_STANDBY) {

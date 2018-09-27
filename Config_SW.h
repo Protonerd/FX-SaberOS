@@ -22,7 +22,7 @@
 #define MEMORYBASE       32
 #define VOL          31
 #define SOUNDFONT       3
-#define SWING         1000
+#define SWING_THRESHOLD         1000
 #define CLASH_THRESHOLD 10 // 10 was the original value in LSOS, Jason's value changed it to 6, but it resulted in false clash trigges at more forceful swings
 /************************************/
 
@@ -66,15 +66,15 @@
  * or by polling the INT_STATUS register via I2C and determining the value (-> CLASH_DET_MPU_POLL)
  * of bit 6
  */
-//#define CLASH_DET_MPU_INT
-#define CLASH_DET_MPU_POLL
+#define CLASH_DET_MPU_INT
+//#define CLASH_DET_MPU_POLL
  
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
  *  of their respective suppress pareameters
 
  */
-#define SWING_SUPPRESS     500
+#define SWING_SUPPRESS     300
 #define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
 #define BLASTERBLOCK_SUPRESS     500
 
@@ -82,12 +82,12 @@
  *  HUM_RELAUNCH will tell the state machine to relaunch
  *  hum sound after this time period elapses
  */
-#define HUM_RELAUNCH     5000
+#define HUM_RELAUNCH     2000
 
 /*
  * How long do the light effect last for the different FX's, choose to synchronize with the sound effect
  */
-#define CLASH_FX_DURATION 400
+#define CLASH_FX_DURATION 250
 #define BLASTER_FX_DURATION 150
 #define SWING_FX_DURATION 400
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration
@@ -115,6 +115,7 @@
  * YOU'LL BURN YOUR BLADE'S LED 
  ************************************/
 #define MAX_BRIGHTNESS    230
+#define FLICKERDEPTH 100
 
 
 /* DEEP_SLEEP
@@ -143,6 +144,7 @@
   #define COLOR_PROFILE
 #endif
 
+#define ANIBLADE
 /*
  * Enable Jukebox, an integrated MP3/WAV player which can play songs/music files
  * stored in the jukebox folder on your storage media (SD-card or SPI flash).
@@ -169,7 +171,8 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
 /*
  * Pixel or Hard Accent
  */
- 
+
+
 //#define PIXEL_ACCENT
 #ifndef PIXEL_ACCENT
   #define HARD_ACCENT
@@ -188,6 +191,7 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
  * For daily use I recommend you comment LS_INFO
  * When you plug your device to USB uncomment LS_INFO !
  */
+#define LS_LOOPLENGHT
 #define LS_SERIAL  //enable serial communication using Wire library
 #if defined LS_SERIAL
 //#define LS_FSM

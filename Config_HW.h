@@ -36,7 +36,7 @@
 // If your saber has only a single button to interact with the electronics, uncomment the next line
 // in case you have 2 buttons (referred to as main and aux buttons) leave this line commented out
 
-#define SINGLEBUTTON
+//#define SINGLEBUTTON
  
 #ifdef DIYINO_PRIME 
   #define MAIN_BUTTON     12
@@ -60,8 +60,8 @@
  * blocks from compile
  *************************************/
 //#define LEDSTRINGS
-#define STAR_LED
-//#define PIXELBLADE
+//#define STAR_LED
+#define PIXELBLADE
 //#define ADF_PIXIE_BLADE
 
 /************************************/
@@ -115,6 +115,7 @@
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
 #include <Wire.h>
 #endif
+
   #if defined LEDSTRINGS or defined STAR_LED
     #define NUMPIXELS 0
   #endif

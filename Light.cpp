@@ -45,9 +45,9 @@ extern struct StoreStruct {
 
 extern SoundFont soundFont;
 extern uint8_t ledPins[];
-//#ifdef ACCENT_LED
+#if defined ACCENT_LED or defined PIXEL_ACCENT
   unsigned long lastAccent = millis();
-//#endif
+#endif
 
 #ifdef JUKEBOX
 #define SAMPLESIZEAVERAGE 30
@@ -56,22 +56,24 @@ extern uint8_t ledPins[];
 bool fireblade=false;
 
 #ifdef PIXELBLADE // FIREBLADE
-// COOLING: How much does the air cool as it rises?
-// Less cooling = taller flames.  More cooling = shorter flames.
-// Default 50, suggested range 20-100 
-static uint8_t Fire_Cooling = 100;//50;
-
-// SPARKING: What chance (out of 255) is there that a new spark will be lit?
-// Higher chance = more roaring fire.  Lower chance = more flickery fire.
-// Default 120, suggested range 50-200.
-static uint8_t Fire_Sparking = 50;//100;
-//#ifdef CROSSGUARDSABER
-//static byte heat[MN_STRIPE];  
-//static byte heat_cg[CG_STRIPE];
-//#else
-static byte heat[NUMPIXELS];  
-//#endif
-#define PIXELSTEP 10//5// how many pixel to treat as a group to save on processing capability
+  #ifdef ANIBLADE
+    // COOLING: How much does the air cool as it rises?
+    // Less cooling = taller flames.  More cooling = shorter flames.
+    // Default 50, suggested range 20-100 
+    static uint8_t Fire_Cooling = 100;//50;
+    
+    // SPARKING: What chance (out of 255) is there that a new spark will be lit?
+    // Higher chance = more roaring fire.  Lower chance = more flickery fire.
+    // Default 120, suggested range 50-200.
+    static uint8_t Fire_Sparking = 50;//100;
+    //#ifdef CROSSGUARDSABER
+    //static byte heat[MN_STRIPE];  
+    //static byte heat_cg[CG_STRIPE];
+    //#else
+    //#endif
+    #define PIXELSTEP 2 // how many pixel to treat as a group to save on processing capability
+    static byte heat[NUMPIXELS/PIXELSTEP];
+  #endif ANIBLADE
 #endif  // PIXELBLADE
 
 
@@ -141,11 +143,11 @@ void lightOn(uint8_t ledPins[], int8_t segment = -1, cRGB color={0,0,0}, int8_t 
   #ifdef PIXELBLADE
     // Light On
     if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe
-      for (uint8_t i = 0; i < NUMPIXELS; i++) {
+      for (uint8_t i = 0; i <= NUMPIXELS; i++) {
         pixels.set_crgb_at(i, color);
       }
     } else {
-      for (uint8_t i = StartPixel-1; i < StopPixel; i++) {
+      for (uint8_t i = StartPixel; i <= StopPixel; i++) {
         pixels.set_crgb_at(i, color);
       }
     }
@@ -153,7 +155,7 @@ void lightOn(uint8_t ledPins[], int8_t segment = -1, cRGB color={0,0,0}, int8_t 
   #endif
 } //lightOn
 
-void lightOff() {
+void lightOff(uint8_t ledPins[], int8_t segment = -1, int8_t StartPixel=-1, int8_t StopPixel=-1) {
   #if defined LEDSTRINGS
     // shut Off
     //Shut down PWM
@@ -185,8 +187,15 @@ void lightOff() {
     value.b = 0;
     value.g = 0;
     value.r = 0; // RGB Value -> Off
-    for (uint16_t i = 0; i < NUMPIXELS; i++) {
-      pixels.set_crgb_at(i, value);
+    if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe
+      for (uint16_t i = 0; i <= NUMPIXELS; i++) {
+        pixels.set_crgb_at(i, value);
+      }
+    }
+    else {
+      for (uint8_t i = StartPixel; i <= StopPixel; i++) {
+        pixels.set_crgb_at(i, value);
+      }
     }
     pixels.sync();
   #endif
@@ -238,6 +247,7 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, int8_t StartPixel=-1
       StopPixel= NUMPIXELS; 
     }
     if (fireblade) { // #ifdef FIREBLADE
+      #ifdef ANIBLADE
       for (unsigned int i=StartPixel; i<StopPixel; (i=i+5)) { // turn on/off one LED at a time
          FireBlade(storage.sndProfile[storage.soundFont].flickerType-2);
          for(unsigned int j=0; j<StopPixel; j++ ) { // fill up string with data
@@ -253,13 +263,14 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, int8_t StartPixel=-1
           }
           pixels.sync(); // Sends the data to the LEDs
         }    
+        #endif ANIBLADE
     } // fireblade
     else { //#else
       for (unsigned int i = StartPixel; i < StopPixel; i = StopPixel*(millis()-ignitionStart)/RampDuration) { // turn on/off the number of LEDs that match rap timing
           //generate a flicker effect between 65% and 115% of MAX_BRIGHTNESS, with a 1 in 115 chance of flicking to 0
           int flickFactor = random(0,115);
           if (flickFactor < 65 && flickFactor > 0) { flickFactor = 100; } 
-         for(uint8_t  j=StartPixel; j<StopPixel; j++ ) { // fill up string with data
+         for(uint8_t  j=StartPixel; j<=StopPixel; j++ ) { // fill up string with data
           if ((DirectionUpDown and j<=i)){
             value.r = MAX_BRIGHTNESS * i / NUMPIXELS * currentColor.r / rgbFactor * flickFactor / 100;
             value.g = MAX_BRIGHTNESS * i / NUMPIXELS * currentColor.g / rgbFactor * flickFactor / 100;
@@ -380,7 +391,7 @@ void lightIgnition(uint8_t ledPins[], uint16_t time, uint8_t type, cRGB color={0
   #endif  
 } // lightIgnition
 
-void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0,0}) {
+void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0,0}, int8_t StartPixel=-1, int8_t StopPixel=-1) {
   #if defined LEDSTRINGS
 
     uint8_t LS_Status[6];
@@ -448,52 +459,32 @@ void lightRetract(uint8_t ledPins[], uint16_t time, uint8_t type,cRGB color={0,0
   
   #ifdef PIXELBLADE
     //switch (type) {
+    //  default:
     //  case 0:
       // Light off the ledstrings Movie Like
       cRGB value;
       value.b = 0;
       value.g = 0;
       value.r = 0; // RGB Value -> Off
-      RampBlade(time, false);
+      if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe    // neopixel ramp code from jbkuma
+        StartPixel=0;
+        StopPixel= NUMPIXELS; 
+      }
+      RampBlade(time, false, StartPixel, StopPixel);
       //break;
   if (fireblade) { // #ifdef FIREBLADE
-/*    #ifdef CROSSGUARDSABER
-      for(unsigned int j=0; j<CG_STRIPE; j++ ) { // clear the heat static variables
-        heat_cg[j]=0;
-      }  
-      for(unsigned int j=0; j<MN_STRIPE; j++ ) { // clear the heat static variables
-        heat[j]=0;
-      } 
-    #else */
-      for(unsigned int j=0; j<NUMPIXELS; j++ ) { // clear the heat static variables
+    #ifdef ANIBLADE
+      for(unsigned int j=0; j<sizeof(heat); j++ ) { // clear the heat static variables
         heat[j]=0;
       }  
-    //#endif
-  } // #endif
-   //}  
+    #endif // ANIBLADE
+  }
   #endif  
 } // lightRetract
 
 void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincolor={0,0,0}, cRGB clashcolor={0,0,0},uint8_t AState=0, int8_t StartPixel=-1 , int8_t StopPixel=-1) {
-    uint8_t variation = abs(analogRead(SPK1) - analogRead(SPK2));
     uint8_t brightness;
 
-    if (not value) {
-  // Calculation of the amount of brightness to fade
-       brightness = constrain(MAX_BRIGHTNESS
-      - (abs(analogRead(SPK1) - analogRead(SPK2)))/8,0,255);
-    } else {
-      brightness = value;
-    }
-  #if defined LS_HEAVY_DEBUG
-    Serial.print(F("Brightness: "));
-    Serial.print(brightness);
-    Serial.print(F("   SPK1: "));
-    Serial.print(analogRead(SPK1));
-    Serial.print(F("   SPK2: "));
-    Serial.println(analogRead(SPK2));
-  #endif
-  
   #if defined LEDSTRINGS
 
   
@@ -501,15 +492,19 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       default:
       case 0:
       // // AudioTracker Flickering
+     brightness = constrain(MAX_BRIGHTNESS
+      - (abs(analogRead(SPK1) - analogRead(SPK2)))*31/storage.volume,0,255);
       for (uint8_t i = 0; i <= 5; i++) {
         analogWrite(ledPins[i], brightness);
       }
       break;
       case 1:
       // anarchic Flickering
+      brightness = constrain(MAX_BRIGHTNESS
+      - random(FLICKERDEPTH),0,255);
       for (uint8_t i = 0; i <= 5; i++) {
         if (i != flickerPos)
-        analogWrite(ledPins[i], brightness - variation / 2);
+        analogWrite(ledPins[i], brightness);
         else
         analogWrite(ledPins[i], MAX_BRIGHTNESS);
       }
@@ -548,10 +543,13 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
   #endif
   
   #if defined STAR_LED
+
   switch (type) {
     default:
     case 0: // AudioTracker Flickering
-        if (AState==AS_BLADELOCKUP) { //animate blade in lockup mode
+      brightness = constrain(MAX_BRIGHTNESS
+      - (abs(analogRead(SPK1) - analogRead(SPK2)))*31/storage.volume,0,255);        
+      if (AState==AS_BLADELOCKUP) { //animate blade in lockup mode
           // gives 25% chance to flick larger range for better randomization
           int lockupFlick = random(0,39); 
           if (lockupFlick < 25) {
@@ -641,11 +639,15 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       //brightness = 255 * flickFactor / 100;
       brightness = flickFactor;
       cRGB color;
-  
+
+
+      
       switch (type) {
         default:
         case 0:
-        // AudioTracker Flickering
+        // use random generated values instead of AudioTracker values for neopixel to reduce loop time i.e. improve motion sensitivity and reaction
+        brightness = constrain(MAX_BRIGHTNESS
+        - random(FLICKERDEPTH),0,255);        // AudioTracker Flickering
         if (AState==AS_BLADELOCKUP) { //animate blade in lockup mode
           // gives 25% chance to flick larger range for better randomization
           int lockupFlick = random(0,39); 
@@ -717,22 +719,23 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
           break;
       case 2: // fire blade red
         if (fireblade) { // #ifdef FIREBLADE
-        
-          if (AState == AS_BLADELOCKUP) {
-            Fire_Cooling = 35;//150;
-            Fire_Sparking = 85;//50;
+          #ifdef ANIBLADE
+          if (AState==AS_BLADELOCKUP) {
+            Fire_Cooling=150;
+            Fire_Sparking=50;
           }
           else {
-            Fire_Cooling = 60;//50;
-            Fire_Sparking = 75;//100;
+            Fire_Cooling=50;
+            Fire_Sparking=100;  
           }
             FireBlade(0);
             pixels.sync(); // Sends the data to the LEDs
+            #endif // ANIBLADE
         }
         break;
       case 3: // fire blade green
         if (fireblade) { // #ifdef FIREBLADE
-        
+          #ifdef ANIBLADE
           if (AState==AS_BLADELOCKUP) {
             Fire_Cooling=200;
             Fire_Sparking=70;
@@ -743,10 +746,12 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
           }
             FireBlade(1);
             pixels.sync(); // Sends the data to the LEDs
+            #endif // ANIBLADE
         }
         break;
       case 4: // fire blade blue
         if (fireblade) { // #ifdef FIREBLADE
+          #ifdef ANIBLADE
         
           if (AState==AS_BLADELOCKUP) {
             Fire_Cooling=100;
@@ -758,9 +763,27 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
           }
             FireBlade(2);
             pixels.sync(); // Sends the data to the LEDs
+            #endif // ANIBLADE
+
         }
         break;
-      }
+      case 5: // spark blade
+        // use random generated values instead of AudioTracker values for neopixel to reduce loop time i.e. improve motion sensitivity and reaction
+        //brightness = constrain(MAX_BRIGHTNESS
+        //- (abs(analogRead(SPK1) - analogRead(SPK2)))*31/storage.volume/8,0,255); 
+        brightness = constrain(MAX_BRIGHTNESS
+        - random(FLICKERDEPTH),0,255);        // AudioTracker Flickering
+          color.r = brightness * maincolor.r / rgbFactor;
+          color.g = brightness * maincolor.g / rgbFactor;
+          color.b = brightness * maincolor.b / rgbFactor;      
+        for (uint16_t i = StartPixel; i <= StopPixel; i++) {
+            pixels.set_crgb_at(i, color); 
+        }
+        pixels.sync();
+        lightBlasterEffect(ledPins, random(5, NUMPIXELS - 3), map(NUMPIXELS, 10, NUMPIXELS-10, 1, 2), 0, storage.sndProfile[storage.soundFont].blasterboltColor);
+        break;
+
+    }
     //} // #endif
   #endif
 } // lightFlicker
@@ -853,7 +876,7 @@ void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_
   #endif
 } // ColorMixing
 
-void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB SndFnt_MainColor={0,0,0}) {
+void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, uint16_t B_time=BLASTER_FX_DURATION, cRGB SndFnt_MainColor={0,0,0}) {
   #if defined LEDSTRINGS
     analogWrite(ledPins[random(1,5)], LOW); 
     delay(BLASTER_FX_DURATION); 
@@ -881,8 +904,10 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
     getColor(SndFnt_MainColor);  // get the main blade color for the fading effect
     for (uint8_t i = 0; i<=2*range-1;i++) {
       if (fireblade) {
+        #ifdef ANIBLADE
         // fully cool down (switch off LED) of a small segment of the blade, which will go up afterwards
-        heat[pixel-i] = 0; // white hot fire burst along the whole blade
+        heat[(pixel/PIXELSTEP)-i] = 0; // white hot fire burst along the whole blade
+        #endif // ANIBLADE
       }
       else {
         uint8_t j=i+pixel;
@@ -914,7 +939,7 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
         }*/
         pixels.sync();
         if (not fireblade) {
-          delay(BLASTER_FX_DURATION/(2*range));  // blast deflect should last for ~500ms
+          delay(B_time/(2*range));  // blast deflect should last for ~500ms
         }
       }
     }
@@ -923,6 +948,11 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, cRGB Sn
 
 void pixelblade_KillKey_Enable() {
   #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
+    #ifdef PIXELBLADE
+      digitalWrite(DATA_PIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
+    #else if ADF_PIXIE_BLADE
+      digitalWrite(PIXIEPIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
+    #endif
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
     #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     for (uint8_t j = 0; j < 3; j++) {
@@ -932,17 +962,6 @@ void pixelblade_KillKey_Enable() {
     #endif
       digitalWrite(ledPins[j], LOW);
     }
-      //digitalWrite(3, LOW);
-      //digitalWrite(5, LOW);
-      //digitalWrite(6, LOW);
-      //digitalWrite(9, LOW);
-      //digitalWrite(10, LOW);
-      //digitalWrite(11, LOW);
-      #ifdef PIXELBLADE
-        digitalWrite(DATA_PIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
-      #else if ADF_PIXIE_BLADE
-        digitalWrite(PIXIEPIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
-      #endif
   #endif      
 }
 
@@ -957,12 +976,6 @@ void pixelblade_KillKey_Disable() {
     #endif
       digitalWrite(ledPins[j], HIGH);
     }
-      //digitalWrite(3, HIGH);
-      //digitalWrite(5, HIGH);
-      //digitalWrite(6, HIGH);
-      //digitalWrite(9, HIGH);
-      //digitalWrite(10, HIGH);
-      //digitalWrite(11, HIGH);
   #endif
 }
 
@@ -976,7 +989,7 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
   #endif
   
   #if defined STAR_LED
-    getColor(color);
+    getColor(storage.sndProfile[storage.soundFont].clashColor);
     lightOn(ledPins, -1, currentColor);
     //delay(CLASH_FX_DURATION);  // clash duration
   #endif
@@ -989,13 +1002,13 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
   
   #if defined PIXELBLADE
     if (fireblade) { // #if defined FIREBLADE  // simply flash white
+          #ifdef ANIBLADE
           //getColor(storage.sndProfile[storage.soundFont].clashColor);
           //lightOn(ledPins, -1, currentColor);
-          for( int i = 0; i < NUMPIXELS; i++) {
-            // the random() function in this loop causes phantom swings
+          for( int i = 0; i < sizeof(heat); i++) {
             heat[i] = constrain(heat[i]+70,0,255); // white hot fire burst along the whole blade
           }
-          
+          #endif // ANIBLADE
     } // fireblade
     else { // #else
           getColor(storage.sndProfile[storage.soundFont].clashColor);
@@ -1052,21 +1065,21 @@ void getColorFix(uint8_t colorID) {
     currentColor.b = MAX_BRIGHTNESS*34/100;
     break;
   case 7:
+//Blue
+    currentColor.r = 0;
+    currentColor.g = 0;
+    currentColor.b = MAX_BRIGHTNESS;
+    break;
+  case 8:
 //Light Blue
     currentColor.r = 0;
     currentColor.g = MAX_BRIGHTNESS;
     currentColor.b = MAX_BRIGHTNESS*63/100;
     break;
-  case 8:
+  case 9:
 //Ice Blue
     currentColor.r = 0;
     currentColor.g = MAX_BRIGHTNESS;
-    currentColor.b = MAX_BRIGHTNESS;
-    break;
-  case 9:
-//Blue
-    currentColor.r = 0;
-    currentColor.g = 0;
     currentColor.b = MAX_BRIGHTNESS;
     break;
   case 10:
@@ -1097,6 +1110,18 @@ void getColorFix(uint8_t colorID) {
 //White
     currentColor.r = MAX_BRIGHTNESS;
     currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = MAX_BRIGHTNESS;
+    break;
+  case 15:
+// LED1 and LED2 full on
+    currentColor.r = MAX_BRIGHTNESS;
+    currentColor.g = MAX_BRIGHTNESS;
+    currentColor.b = 0;
+    break;
+  case 16:
+// only LED3 is on
+    currentColor.r = 0;
+    currentColor.g = 0;
     currentColor.b = MAX_BRIGHTNESS;
     break;
   default:
@@ -1184,36 +1209,6 @@ void InitAdafruitPixie(uint8_t ledPins[]) {
   //pixieSerial.setSerial(-1, PIXIEPIN);
   pixieSerial.begin(115200); // Pixie REQUIRES this baud rate
   strip.setBrightness(MAX_BRIGHTNESS);  // Adjust as necessary to avoid blinding
-  /*pixelblade_KillKey_Disable();
-  Serial.println("Red!");
-  for(uint8_t i=0; i< NUMPIXELS; i++)
-    strip.setPixelColor(i, 255, 0, 0);
-  strip.show();
-  delay(300);
-
-  Serial.println("Green!");
-  for(uint8_t i=0; i< NUMPIXELS; i++)
-    strip.setPixelColor(i, 0, 255, 0);
-  strip.show();
-  delay(300);
-
-  Serial.println("Blue!");
-  for(uint8_t i=0; i< NUMPIXELS; i++)
-    strip.setPixelColor(i, 0, 0, 255);
-  strip.show();
-  delay(300);
-  currentColor.r = 0;
-  currentColor.g = 200;
-  currentColor.b = 255;
-  lightOn(ledPins, -1, currentColor);
-  delay(300);
-    for(uint8_t i=0; i< NUMPIXELS; i++)
-    strip.setPixelColor(i, 255, 0, 0);
-  strip.show();
-  delay(1000);
-  lightOff();
-  getColor(storage.sndProfile[storage.soundFont].mainColor);
-  pixelblade_KillKey_Enable();*/
 }
 #endif
 
@@ -1303,7 +1298,7 @@ void JukeBox_Stroboscope(cRGB color) {
 
 
 #ifdef PIXELBLADE
-//#ifdef FIREBLADE
+#ifdef ANIBLADE
 void FireBlade(uint8_t DominantColor) {
 // Array of temperature readings at each simulation cell
   int pixelnumber;
@@ -1317,9 +1312,9 @@ void FireBlade(uint8_t DominantColor) {
       heat_cg[i] = constrain(heat_cg[i] - random(5),0,255);
     }
 #else */
-    for( int i = 0; i < NUMPIXELS; i++) {
+    for( int i = 0; i < sizeof(heat); i++) {
       // the random() function in this loop causes phantom swings
-      heat[i] = constrain(heat[i] - random(((Fire_Cooling * 10) / NUMPIXELS) + 2),0,255);
+      heat[i] = constrain(heat[i] - random(((Fire_Cooling * 10) / sizeof(heat)) + 2),0,255);
     }
 //#endif
 
@@ -1332,7 +1327,7 @@ void FireBlade(uint8_t DominantColor) {
       heat_cg[k] = (heat_cg[k - 1] + heat_cg[k - 2] + heat_cg[k - 2] ) / 3;
     }
 #else*/
-    for( int k= NUMPIXELS - 1; k >= 2; k--) {
+    for( int k= sizeof(heat) - 1; k >= 2; k--) {
       heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2] ) / 3;
     }
 //#endif
@@ -1375,9 +1370,15 @@ void FireBlade(uint8_t DominantColor) {
       pixels.set_crgb_at(j, color); // Set value at LED found at index j
     }
 #else*/
-    for( int j = 0; j < NUMPIXELS; j++) {
+    for( int j = 0; j < sizeof(heat); j++) {
        cRGB color = HeatColor( heat[j],DominantColor);
-        pixels.set_crgb_at(j, color); // Set value at LED found at index j
+       if (PIXELSTEP*j+1<=NUMPIXELS-1) {
+        for (int i=0 ; i<PIXELSTEP; i++) {
+          pixels.set_crgb_at(PIXELSTEP*j+i, color); // Set value at LED found at index j
+        }
+        //pixels.set_crgb_at(2*j, color); // Set value at LED found at index j
+        //pixels.set_crgb_at(2*j+1, color); // Set value at LED found at index j
+       }
     }
 //#endif
 }
@@ -1468,6 +1469,31 @@ cRGB HeatColor( uint8_t temperature, uint8_t DominantColor)
     return heatcolor;
 }
 
+/*void SparkBladeFX(uint8_t AState=0)
+{
+  //init spark center position and size for the first time
+  if (AState==AS_IGNITION or true) {
+    for( uint8_t i = 0; i < (NUMPIXELS/10)-1; i++) {
+      SparkBlade[i][0]=constrain(i*(NUMPIXELS/10)+random(0,NUMPIXELS/10),0,NUMPIXELS-1);
+      SparkBlade[i][1]=random(0,NUMPIXELS/10);
+    }
+  }
+  else { // flickering
+    for( uint8_t i = 0; i < sizeof(SparkBlade); i++) {
+      for( uint8_t j = 0; j < sizeof(SparkBlade[0]); j++) {
+        for( uint8_t k=SparkBlade[i][0]-SparkBlade[i][1]; k<SparkBlade[i][0]+SparkBlade[i][1]; k++) {
+          heat[k]=constrain(heat[k]+Spark_Step,0,MAX_BRIGHTNESS);
+      }
+    }
+  }
+    for( int j = 0; j < NUMPIXELS; j++) {
+      cRGB color = HeatColor( heat[j],1);
+      pixels.set_crgb_at(j, color); // Set value at LED found at index j
+    }
+    pixels.sync();  
+  }
+}*/
+
 uint8_t scale8_video( uint8_t i, uint8_t scale)
 {
 //    uint8_t j = (((int)i * (int)scale) >> 8) + ((i&&scale)?1:0);
@@ -1490,24 +1516,8 @@ uint8_t scale8_video( uint8_t i, uint8_t scale)
 
     return j;
 }
-
-/*uint8_t DominantMainColor(cRGB color={0,0,0}) {
-  uint8_t tmp_d;
-  if (color.r>=color.g and color.r>=color.b) {
-    tmp_d=0; // red
-  }
-  else if (color.g>=color.r and color.g>=color.b) {
-    tmp_d=1; // green
-  }
-  else if (color.b>=color.r and color.b>=color.g) {
-    tmp_d=2; // blue
-  }
-  else {
-    tmp_d=0; // red default
-  }
-  return tmp_d;
-}*/
 #endif
+#endif // ANIBLADE
 
 #ifdef COLOR_PROFILE
 cRGB setColorProfile(cRGB currentcolor) {
@@ -1537,7 +1547,7 @@ colorProfiles[4].b=255;
 
 //#if defined ACCENT_LED
 void accentLEDControl( AccentLedAction_En AccentLedAction) {
-#ifdef HARD_ACCENT
+#if defined HARD_ACCENT
   if (AccentLedAction==AL_PULSE) {
         if (millis() - lastAccent <= 400) {
           analogWrite(ACCENT_LED, millis() - lastAccent);
@@ -1554,7 +1564,7 @@ void accentLEDControl( AccentLedAction_En AccentLedAction) {
   else {  // AL_OFF
     digitalWrite(ACCENT_LED,LOW);    
   }
-#endif
+#endif //HARD_ACCENT
 }
 //#endif
 

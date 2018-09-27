@@ -28,20 +28,18 @@
 /*
 * DFPLAYER variables
 */
-#ifdef OLD_DPFPLAYER_LIB
-  #include "DFPlayer_Mini_Mp3.h"
-  //SoftwareSerial mp3player(DFPLAYER_TX, DFPLAYER_RX); // TX, RX
-  SoftwareSerial mp3player(7, 8); // TX, RX
-#else
-  #include <DFPlayerSerial.h>
-  #include <DFPlayer.h>
-  DFPlayer dfplayer;
-#endif
+
+#include <DFPlayerSerial.h>
+#include <DFPlayer.h>
+DFPlayer dfplayer;
 
 SoundFont soundFont;
 unsigned long sndSuppress = millis();
 unsigned long sndSuppress2 = millis();
 unsigned long clashSndSuppress = millis();
+#ifdef LS_LOOPLENGHT
+  unsigned long loopcurrenttime;
+#endif
 #ifdef DEEP_SLEEP
   unsigned long sleepTimer = millis();
 #endif
@@ -130,11 +128,6 @@ OneButton mainButton(MAIN_BUTTON, true);
 #ifndef SINGLEBUTTON
 OneButton lockupButton(AUX_BUTTON, true);
 #endif
-// replaced by Saber State Machine Variables
-//bool actionMode = false; // Play with your saber
-//bool configMode = false; // Configure your saber
-//static bool ignition = false;
-//static bool browsing = false;
 
 /***************************************************************************************************
  * ConfigMode Variables
@@ -183,6 +176,7 @@ void setup() {
       accentPixels.setColorOrderRGB();
     #endif
   #endif
+
 	// join I2C bus (I2Cdev library doesn't do this automatically)
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
 	Wire.begin();
@@ -206,23 +200,23 @@ Serial.println(configAdress);
 		for (uint8_t i = 0; i <= 2; i++) {
 			storage.version[i] = CONFIG_VERSION[i];
 		}
-		  storage.soundFont = SOUNDFONT;
-		  storage.volume = VOL;
+		  storage.soundFont = 0;
+		  storage.volume = 15;
       for (uint8_t i=0; i<SOUNDFONT_QUANTITY;i++){
         storage.sndProfile[i].swingSensitivity=1000;
         storage.sndProfile[i].flickerType=0;
         storage.sndProfile[i].poweronoffType=0;      
       }
     for (uint8_t i=0; i<SOUNDFONT_QUANTITY;i++){
-      storage.sndProfile[i].mainColor.r=20;
-      storage.sndProfile[i].mainColor.g=20;
-      storage.sndProfile[i].mainColor.b=20;
-      storage.sndProfile[i].clashColor.r=20;
-      storage.sndProfile[i].clashColor.g=20;
-      storage.sndProfile[i].clashColor.b=20;
-      storage.sndProfile[i].blasterboltColor.r=20;
-      storage.sndProfile[i].blasterboltColor.g=20;
-      storage.sndProfile[i].blasterboltColor.b=20;
+      storage.sndProfile[i].mainColor.r=MAX_BRIGHTNESS;
+      storage.sndProfile[i].mainColor.g=0;
+      storage.sndProfile[i].mainColor.b=0;
+      storage.sndProfile[i].clashColor.r=0;
+      storage.sndProfile[i].clashColor.g=MAX_BRIGHTNESS;
+      storage.sndProfile[i].clashColor.b=0;
+      storage.sndProfile[i].blasterboltColor.r=0;
+      storage.sndProfile[i].blasterboltColor.g=0;
+      storage.sndProfile[i].blasterboltColor.b=MAX_BRIGHTNESS;
     }
     saveConfig();
 #if defined LS_INFO
@@ -238,19 +232,24 @@ Serial.println(configAdress);
 // retreive the sound font ID stored in the EEPROM (last configured)
   soundFont.setID(storage.soundFont);
 // in case a fireblade flicker type is selected for the active sound font, set the bool variable
-  if (storage.sndProfile[storage.soundFont].flickerType==2 or storage.sndProfile[storage.soundFont].flickerType==3 or storage.sndProfile[storage.soundFont].flickerType==4) {fireblade=true;}
-
+// in case a fireblade flicker type is selected for the active sound font, set the bool variable
+  if (CS_FLICKERTYPE < CS_LASTMEMBER and (storage.sndProfile[storage.soundFont].flickerType==2 or storage.sndProfile[storage.soundFont].flickerType==3 or storage.sndProfile[storage.soundFont].flickerType==4)) {
+    fireblade=true;
+   }
+   else {
+    fireblade=false;
+   }
 /* CONFIG ITEMS PRESETS */
 /* Set default values to parameters which can be modified in config menu, if the corresponding config menu item is disabled */  
 // if the config menu does not contain a menu item to define swing sensitivity, default it to 1000 (works very well, mid sensitivity)  
   if (CS_SWINGSENSITIVITY > CS_LASTMEMBER) {
     for (uint8_t i=0; i<SOUNDFONT_QUANTITY;i++){
-      storage.sndProfile[i].swingSensitivity=1000;      
+      storage.sndProfile[i].swingSensitivity=SWING_THRESHOLD;      
     }
   }
   if (CS_VOLUME > CS_LASTMEMBER) {
     storage.volume=31;
-  }  
+  }   
 
   // enable watchdog to avoid system hang
   wdt_reset();
@@ -470,7 +469,7 @@ Serial.println(configAdress);
   lockupButton.setClickTicks(CLICK);
   lockupButton.setPressTicks(PRESS_CONFIG);
   lockupButton.attachClick(lockupClick);
-  lockupButton.attachDoubleClick(lockupDoubleClick);
+  //lockupButton.attachDoubleClick(lockupDoubleClick);
   lockupButton.attachLongPressStart(lockupLongPressStart);
   lockupButton.attachLongPressStop(lockupLongPressStop);
   lockupButton.attachDuringLongPress(lockupLongPress);
@@ -497,11 +496,16 @@ Serial.println(configAdress);
   //pinMode(SPK2, INPUT);
   SinglePlay_Sound(soundFont.getBoot());//11);
   delay(20);
-
+  if (storage.volume <= 15) {
+    Set_Volume(15);
+    delay(200);
+  }
+  
 #ifdef ADF_PIXIE_BLADE
   InitAdafruitPixie(ledPins);
 #endif
-
+  SinglePlay_Sound(11);
+  delay(850);
 
 
   /***** Quick Mute *****/
@@ -520,7 +524,8 @@ Serial.println(configAdress);
   #ifdef DEEP_SLEEP
     sleepTimer = millis();
   #endif
-  //Disable_MP3(true);  // disable the MP3 in Stand-by mode to enable FTDI communication
+
+  Set_Volume(storage.volume);
 
 } // end setup
 
@@ -542,6 +547,10 @@ void loop() {
   lockupButton.tick();
 #endif
 
+#ifdef LS_LOOPLENGHT
+  Serial.println(millis()-loopcurrenttime);
+  loopcurrenttime=millis();
+#endif
   /*//////////////////////////////////////////////////////////////////////////////////////////////////////////
      ACTION MODE HANDLER
   */ /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -588,12 +597,12 @@ void loop() {
       #endif
       
       sndSuppress = millis()+soundFont.getPowerOnTime()+1000;
-      sndSuppress2 = millis();
+      sndSuppress2 = millis()+soundFont.getPowerOnTime()+1000;
 
     #ifdef CROSSGUARDSABER
       
       // ignite the crossguard after the defined wat time or latest when a new hum shall be relaunched
-      while (millis()-sndSuppress2<STAGGERED_IGNITION_DELAY and millis()-sndSuppress2<HUM_RELAUNCH) {
+      while (millis() > sndSuppress2 and millis()-sndSuppress2<STAGGERED_IGNITION_DELAY and millis()-sndSuppress2<HUM_RELAUNCH) {
         lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates, MAINBLADE_OFFSET, MAINBLADE_OFFSET+MAINBLADE_LENGTH);
       }        
         SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
@@ -603,8 +612,8 @@ void loop() {
     #endif
     
       // Get the initial position of the motion detector
-      motionEngine();
-      ActionModeSubStates = AS_HUM;
+      //motionEngine();
+      //ActionModeSubStates = AS_HUM;
 #if defined ACCENT_LED
       // turns accent LED On
       accentLEDControl(AL_ON);
@@ -642,42 +651,13 @@ void loop() {
               or abs(curDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
               or abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity))) and (millis() - sndSuppress >= BLASTERBLOCK_SUPRESS)) {
 
-      if (soundFont.getBlaster((storage.soundFont)*NR_FILE_SF)) {
-        SinglePlay_Sound(soundFont.getBlaster((storage.soundFont)*NR_FILE_SF));
-#if defined LEDSTRINGS
-        lightBlasterEffect(ledPins, 0, 0);
-        //blasterPin = random(1,5); //momentary shut off one led segment
-        //analogWrite(ledPins[blasterPin], LOW);
-#endif
-#if defined STAR_LED
-        getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
-        lightOn(ledPins, -1, currentColor);
-#endif //STAR_LED
-#if defined PIXELBLADE
-      if (fireblade) { // #ifdef FIREBLADE
-        blasterPixel = random(NUMPIXELS / 4, NUMPIXELS - 3); //momentary shut off one led segment
-        lightBlasterEffect(ledPins, blasterPixel, map(NUMPIXELS, 10, NUMPIXELS-10, 1, 2), storage.sndProfile[storage.soundFont].blasterboltColor);
-      }
-      else { // #else
-        lightOn(ledPins, -1, currentColor);
-        blasterPixel = random(NUMPIXELS / 4, NUMPIXELS - 3); //momentary shut off one led segment
-        getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
-        lightBlasterEffect(ledPins, blasterPixel, map(NUMPIXELS, 10, NUMPIXELS-10, 1, 2), storage.sndProfile[storage.soundFont].blasterboltColor);
+        FX_BlasterBlock();
 
-      } // #endif
-#endif
-        //delay(BLASTER_FX_DURATION);  // blaster bolt deflect duration
-        // Some Soundfont may not have Blaster sounds
-        if (millis() - sndSuppress > 50) {
-          //SinglePlay_Sound(soundFont.getBlaster((storage.soundFont)*NR_FILE_SF));
-          sndSuppress = millis();
-        }
-      }
     }
     // CLASH state, flicker with clash color/brightness for the duration of CLASH_FX_DURATION
     else if (ActionModeSubStates==AS_CLASH){
       // check if duration expired
-      if (millis()-sndSuppress < CLASH_FX_DURATION) {
+      if (millis() > sndSuppress and millis()-sndSuppress < CLASH_FX_DURATION) {
         lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates);
       }
       else {
@@ -690,30 +670,29 @@ void loop() {
        We detect swings as hilt's orientation change
        since IMUs sucks at determining relative position in space
     */
-      else if ( (ActionModeSubStates != AS_BLADELOCKUP
-                 // and (not fireblade)
+    else if (
+      (not fireblade) and (ActionModeSubStates != AS_BLADELOCKUP
       #ifdef SWING_QUATERNION
         or lockuponclash// end lockuponclash event on a swing, but only if swings are calculated based on quaternions, otherwise swings will
                           // interrut the lockup uncontrollably
       #endif
       )
-      #ifndef SWING_QUATERNION
+#ifndef SWING_QUATERNION
       and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity // and it has suffisent power on a certain axis
               or abs(curDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
               or abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity)
-              and (millis() - sndSuppress > SWING_SUPPRESS)
-      #else // SWING_QUATERNION is defined
+              and (millis() > sndSuppress and millis() - sndSuppress > SWING_SUPPRESS)
+#else // SWING_QUATERNION is defined
         and abs(curRotation.w * 1000) < 999 // some rotation movement have been initiated
       and (
-      #if defined BLADE_Y
       (
-        (millis() - sndSuppress > SWING_SUPPRESS) // The movement doesn't follow another to closely
+        (millis() > sndSuppress and millis() - sndSuppress > SWING_SUPPRESS) // The movement doesn't follow another to closely
         and (abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity  // and it has suffisent power on a certain axis
              or abs(curDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
              or abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity * 10)
       )
       or (// A reverse movement follow a first one
-        (millis() - sndSuppress2 > SWING_SUPPRESS)   // The reverse movement doesn't follow another reverse movement to closely
+        (millis() > sndSuppress2 and millis() - sndSuppress2 > SWING_SUPPRESS)   // The reverse movement doesn't follow another reverse movement to closely
         // and it must be a reverse movement on Vertical axis
         and (
           abs(curDeltAccel.x) > abs(curDeltAccel.z)
@@ -723,13 +702,13 @@ void loop() {
              and curDeltAccel.x < -storage.sndProfile[storage.soundFont].swingSensitivity)
             or (
               prevDeltAccel.x < 0
-              and curDeltAccel.x	> storage.sndProfile[storage.soundFont].swingSensitivity
+              and curDeltAccel.x  > storage.sndProfile[storage.soundFont].swingSensitivity
             )
           )
         )
       )
       or (// A reverse movement follow a first one
-        (millis() - sndSuppress2 > SWING_SUPPRESS)  // The reverse movement doesn't follow another reverse movement to closely
+        (millis() > sndSuppress2 and millis() - sndSuppress2 > SWING_SUPPRESS)  // The reverse movement doesn't follow another reverse movement to closely
         and ( // and it must be a reverse movement on Horizontal axis
           abs(curDeltAccel.z) > abs(curDeltAccel.x)
           and abs(prevDeltAccel.z) > storage.sndProfile[storage.soundFont].swingSensitivity
@@ -738,18 +717,17 @@ void loop() {
              and curDeltAccel.z < -storage.sndProfile[storage.soundFont].swingSensitivity)
             or (
               prevDeltAccel.z < 0
-              and curDeltAccel.z	> storage.sndProfile[storage.soundFont].swingSensitivity
+              and curDeltAccel.z  > storage.sndProfile[storage.soundFont].swingSensitivity
             )
           )
         )
+      )
       )
       // the movement must not be triggered by pure blade rotation (wrist rotation)
       and not (
         abs(prevRotation.y * 1000 - curRotation.y * 1000) > abs(prevRotation.x * 1000 - curRotation.x * 1000)
         and
         abs(prevRotation.y * 1000 - curRotation.y * 1000) > abs(prevRotation.z * 1000 - curRotation.z * 1000)
-      )
-      #endif // BLADE_Y
       ) 
 #endif // SWING_QUATERNION 
   )     
@@ -804,10 +782,10 @@ void loop() {
   
   
   
-          if (millis() - sndSuppress > SWING_SUPPRESS) {
+          if (millis() > sndSuppress and millis() - sndSuppress > SWING_SUPPRESS) {
             sndSuppress = millis();
           }
-          if (millis() - sndSuppress2 > SWING_SUPPRESS) {
+          if (millis() > sndSuppress2 and millis() - sndSuppress2 > SWING_SUPPRESS) {
             sndSuppress2 = millis();
           }
       #ifdef CLASH_DET_MPU_POLL
@@ -823,7 +801,7 @@ void loop() {
         accentLEDControl(AL_PULSE);
       }
       // relaunch hum if more than HUM_RELAUNCH time elapsed since entering AS_HUM state
-      if (millis() - sndSuppress > HUM_RELAUNCH and not hum_playing and ActionModeSubStates != AS_BLADELOCKUP) {
+      if (millis() > sndSuppress and millis() - sndSuppress > HUM_RELAUNCH and (not hum_playing) and ActionModeSubStates != AS_BLADELOCKUP) {
         HumRelaunch();
       }
       getColor(storage.sndProfile[storage.soundFont].mainColor);
@@ -855,16 +833,10 @@ void loop() {
         NextConfigState();
       #else
         // in two button mode, activate different Hit-and-Run functions depending on the config state
-        if (ConfigModeSubStates==CS_BATTERYLEVEL or ConfigModeSubStates==CS_MAINCOLOR or ConfigModeSubStates==CS_CLASHCOLOR or ConfigModeSubStates==CS_BLASTCOLOR or ConfigModeSubStates==CS_STORAGEACCESS or ConfigModeSubStates==CS_UARTMODE) {
-          changeMenu = false;
-          SaberState=S_STANDBY;
-          PrevSaberState=S_CONFIG;
-          #ifdef PIXELBLADE
-            pixelblade_KillKey_Disable();
-          #endif      
-        }
         // for all other states:
         switch(ConfigModeSubStates) {
+           default:
+            NextConfigState();
           case CS_VOLUME:
             // turn on the volume full
             storage.volume = 30; //MAX
@@ -889,17 +861,7 @@ void loop() {
           else {
             storage.sndProfile[storage.soundFont].swingSensitivity=0;
           }
-  /*          if (storage.sndProfile[storage.soundFont].swingSensitivity < 8000 ) {
-              storage.sndProfile[storage.soundFont].swingSensitivity=8000;
-            }
-            else if ((storage.sndProfile[storage.soundFont].swingSensitivity >= 8000 ) and (storage.sndProfile[storage.soundFont].swingSensitivity < 16000 )) {
-              storage.sndProfile[storage.soundFont].swingSensitivity=16000;
-            }
-            else { // 
-              storage.sndProfile[storage.soundFont].swingSensitivity=100;
-            }*/
             BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);
-            Serial.println(storage.sndProfile[storage.soundFont].swingSensitivity);
             break;
           case CS_SLEEPINIT:
             break;
@@ -908,10 +870,10 @@ void loop() {
     }
     if (PrevSaberState == S_STANDBY) { // entering config mode
       PrevSaberState = S_CONFIG;
-      //if (storage.volume <= 10) {
-      //  Set_Volume(10);
-      //  delay(200);
-      //}
+      if (storage.volume <= 15) {
+        Set_Volume(15);
+        delay(200);
+      }
       SinglePlay_Sound(3);
       delay(600);
 
@@ -923,16 +885,8 @@ void loop() {
       Serial.println(F("START CONF"));
 #endif
       enterMenu = true;
-      ConfigModeSubStates=static_cast<ConfigModeSubStatesEnum>(-1);
+      ConfigModeSubStates=-1;
       NextConfigState();
-//#ifdef BATTERY_CHECK
-//      ConfigModeSubStates = CS_BATTERYLEVEL;
-//      BatLevel_ConfigEnter();
-//#else
-//      ConfigModeSubStates = CS_SOUNDFONT;
-//      SinglePlay_Sound(5);
-//      delay(500);
-//#endif
     }
 #if defined PIXELBLADE or defined STAR_LED or defined ADF_PIXIE_BLADE
     if (ConfigModeSubStates == CS_MAINCOLOR or ConfigModeSubStates == CS_CLASHCOLOR or ConfigModeSubStates == CS_BLASTCOLOR) {
@@ -977,7 +931,7 @@ void loop() {
       #endif // GRAVITY_COLOR
     }
 #endif // color configuration for PIXELBLADE or STAR_LED or ADF_PIXIE_BLADE
-    if (ConfigModeSubStates == CS_FLICKERTYPE) {
+    if (ConfigModeSubStates == CS_FLICKERTYPE or ConfigModeSubStates==CS_SOUNDFONT) {
       lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates);
     }
     else if (ConfigModeSubStates == CS_SWINGSENSITIVITY and (abs(curDeltAccel.y) > storage.sndProfile[storage.soundFont].swingSensitivity // and it has suffisent power on a certain axis
@@ -995,13 +949,14 @@ void loop() {
   *//////////////////////////////////////////////////////////////////////////////////////////////////////////
   else if (SaberState == S_STANDBY) {
     
-    if (ActionModeSubStates == AS_RETRACTION) { // we just leaved Action Mode
+    if (PrevSaberState==S_SABERON and ActionModeSubStates == AS_RETRACTION) { // we just leaved Action Mode
       //detachInterrupt(0);
+      ActionModeSubStates = AS_HUM;
+      PrevSaberState = S_STANDBY;
       #if defined DEEP_SLEEP
         sleepTimer=millis(); // reset sleep time counter
       #endif
       SinglePlay_Sound(soundFont.getPowerOff((storage.soundFont)*NR_FILE_SF));
-      ActionModeSubStates = AS_HUM;
       changeMenu = false;
       modification = 0;
       #ifdef CROSSGUARDSABER
@@ -1015,9 +970,6 @@ void loop() {
 #endif
       lightRetract(ledPins, soundFont.getPowerOffTime(), storage.sndProfile[storage.soundFont].poweronoffType,storage.sndProfile[storage.soundFont].mainColor);
       pixelblade_KillKey_Enable();
-      #if defined DEEP_SLEEP
-        sleepTimer=millis(); // reset sleep time counter
-      #endif
     }
     if (PrevSaberState == S_CONFIG) { // we just leaved Config Mode
       saveConfig();
@@ -1027,6 +979,9 @@ void loop() {
       #endif
       SinglePlay_Sound(3);
       //browsing = false;
+     // set back volume to stored config value (if it's 0, saber will be muted)
+      Set_Volume(storage.volume);
+      delay(200);
       enterMenu = false;
       modification = 0;
       //dfplayer.setVolume(storage.volume);
@@ -1049,9 +1004,9 @@ void loop() {
 
     // switch of light in Stand-by mode
 #if defined STAR_LED
-    lightOff();
+    lightOff(ledPins, -1);
 #else
-    lightOff();
+    lightOff(ledPins, -1);
 #endif
 
     accentLEDControl(AL_ON);
@@ -1059,15 +1014,8 @@ void loop() {
       if (millis() - sleepTimer > SLEEPYTIME) { // after the defined max idle time SLEEPYTIME automatically go to sleep mode
         SaberState=S_SLEEP;
         PrevSaberState=S_STANDBY;
-        // play a beep 3 times
-        SinglePlay_Sound(1);
-        delay(500);
-        SinglePlay_Sound(1);
-        delay(500);    
-        SinglePlay_Sound(1);
-        delay(500);
       }
-    #endif
+    #endif // DEEP_SLEEP
   } // END STANDBY MODE
 
 #ifdef JUKEBOX
@@ -1277,7 +1225,7 @@ void FX_Clash() {
           }
         }
         else { // ordinary clash
-          if (millis() - clashSndSuppress >= CLASH_SUPRESS) {
+          if (millis() > clashSndSuppress and millis() - clashSndSuppress >= CLASH_SUPRESS) {
             SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
             /*
                THIS IS A CLASH  !
@@ -1304,16 +1252,36 @@ void FX_Clash() {
   }
 #endif
 
-//#if defined LS_MOTION_DEBUG
-//inline void printAccel(int16_t ax, int16_t ay, int16_t az) {
-//  Serial.print(F("\t\tx="));
-//  Serial.print(ax);
-//  Serial.print(F("\t\ty="));
-//  Serial.print(ay);
-//  Serial.print(F("\t\tz="));
-//  Serial.println(az);
-//} //printQuaternion
-//#endif
+void FX_BlasterBlock() {
+  
+      if (soundFont.getBlaster((storage.soundFont)*NR_FILE_SF)) {
+        SinglePlay_Sound(soundFont.getBlaster((storage.soundFont)*NR_FILE_SF));
+#if defined STAR_LED
+        getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
+        //lightOn(ledPins, -1, currentColor);
+        //delay(BLASTER_FX_DURATION);
+        lightBlasterEffect(ledPins, 0, 0, BLASTER_FX_DURATION,storage.sndProfile[storage.soundFont].blasterboltColor);
+#endif //STAR_LED
+#if defined PIXELBLADE
+      if (fireblade) { // #ifdef FIREBLADE
+        blasterPixel = random(NUMPIXELS / 4, NUMPIXELS - 3); //momentary shut off one led segment
+        lightBlasterEffect(ledPins, blasterPixel, map(NUMPIXELS, 10, NUMPIXELS-10, 1, 2), BLASTER_FX_DURATION, storage.sndProfile[storage.soundFont].blasterboltColor);
+      }
+      else { // #else
+        lightOn(ledPins, -1, currentColor);
+        blasterPixel = random(NUMPIXELS / 4, NUMPIXELS - 3); //momentary shut off one led segment
+        getColor(storage.sndProfile[storage.soundFont].blasterboltColor);
+        lightBlasterEffect(ledPins, blasterPixel, map(NUMPIXELS, 10, NUMPIXELS-10, 1, 2), BLASTER_FX_DURATION,storage.sndProfile[storage.soundFont].blasterboltColor);
+      } //
+#endif
+        //delay(BLASTER_FX_DURATION);  // blaster bolt deflect duration
+        // Some Soundfont may not have Blaster sounds
+        if (millis() > sndSuppress and millis() - sndSuppress > 50) {
+          //SinglePlay_Sound(soundFont.getBlaster((storage.soundFont)*NR_FILE_SF));
+          sndSuppress = millis();
+        }
+      }  
+}
 
 // ====================================================================================
 // ===           	  			EEPROM MANIPULATION FUNCTIONS	            		===
@@ -1343,6 +1311,15 @@ inline void saveConfig() {
 //#endif
 } //saveConfig
 
+
+void DumpConfigEEPROM() {
+//#ifdef LS_DEBUG
+  // dump values stored in EEPROM
+  for (uint8_t i = configAdress; i < configAdress+sizeof(StoreStruct); i++) {
+    Serial.print(i); Serial.print("\t"); Serial.println(EEPROM.readByte(i));
+  }
+//#endif
+}
 // ====================================================================================
 // ===                          SOUND FUNCTIONS                                     ===
 // ====================================================================================
@@ -1354,73 +1331,33 @@ void HumRelaunch() {
 }
 
 void SinglePlay_Sound(uint8_t track) {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_play_physical(track);
-#else // DFPlayer_LSOS
   dfplayer.playPhysicalTrack(track);
-#endif
 }
 
 void LoopPlay_Sound(uint8_t track) {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_loop_play(track);
-#else // DFPlayer_LSOS
   dfplayer.playSingleLoop(track);
-#endif
 }
 
 void Set_Volume(int8_t volumeSet) {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_set_volume (volumeSet);
-#else
   dfplayer.setVolume(volumeSet); // Too Slow: we'll change volume on exit
-#endif
-delay(50);
+  delay(50);
 }
 
 void Set_Loop_Playback() {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_single_loop(true);
-#else
   dfplayer.setSingleLoop(true);;
-#endif
 }
 
 void InitDFPlayer() {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_set_serial (mp3player);  //set softwareSerial for DFPlayer-mini mp3 module
-  mp3player.begin(9600);
-  delay(50);
-  mp3_set_device(1); //playback from SD card
-  //delay(50);
-  //mp3_set_volume (storage.volume);
-#else
   dfplayer.setSerial(DFPLAYER_TX, DFPLAYER_RX);
-  // AK 7.9.2016: if the storage.volume has no or invalid value, it will cause the
-  // sketch to repeat setup (reset itself) - up till now no idea why?
-  // this can happen if the EEPROM is erased (i.e. reflash of bootloader)
-  //if (CS_LASTMEMBER < CS_VOLUME) { // if the volume cannot be set from the config menu, set it to the loudest
-  //  storage.volume=31;
-  //}
-  //dfplayer.setVolume(storage.volume);
-  //setup finished. Boot ready. We notify !
-#endif
 }
 
 void Pause_Sound() {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_pause();
-#else
+
   dfplayer.pause();
-#endif
 }
 
 void Resume_Sound() {
-#ifdef OLD_DPFPLAYER_LIB
-  mp3_play();
-#else
   dfplayer.play();
-#endif
 }
 
 #ifdef DEEP_SLEEP
@@ -1465,6 +1402,7 @@ void sleepNow()         // here we put the arduino to sleep
 
 void SleepModeEntry() {
   // switch off all LS channels
+  pixelblade_KillKey_Enable();
   for (uint8_t i = 0; i < sizeof(ledPins); i++) {
     digitalWrite(ledPins[i], LOW);
   }
@@ -1526,12 +1464,10 @@ void Disable_FTDI(bool ftdi_off) {
 
   if (ftdi_off) {  //  disable FTDI
     digitalWrite(FTDI_PSWITCH, HIGH); // disable the FTDI chip
-    //delay (800);  // cut power to FTDI, this delay is needed, the sleep
-                  //function will provoke a Serial error otherwise!!
+
   }
   else {  //  enable ftdi
     digitalWrite(FTDI_PSWITCH, LOW); // enable the FTDI chip
-    //delay (800);    
   }
   
 }
@@ -1540,11 +1476,9 @@ void Disable_MP3(bool mp3_off) {
 
   if (mp3_off) {  //  disable MP3
     digitalWrite(MP3_PSWITCH, HIGH); // disable the MP3 chip and the audio amp
-    //delay (300);
   }
   else {  //  enable MP3
     digitalWrite(MP3_PSWITCH, LOW); // enable the MP3 chip and the audio amp
-    //delay (300);    
   }
   
 }
@@ -1612,8 +1546,8 @@ void MonitorBattery() {
     //BatteryStatus=analogRead(BATTERY_READPIN);
   #endif
   #if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
-    BladeMeter(ledPins,(getBandgap()/37)*10);
-    Serial.println(getBandgap());
+    BladeMeter(ledPins,((getBandgap()-300)/7)*10);
+    //Serial.println(getBandgap());
   #endif
 }
  
@@ -1629,5 +1563,6 @@ int getBandgap ()
    while (ADCSRA & bit (ADSC))
      { }  // wait for conversion to complete
    int results = (((InternalReferenceVoltage * 1024) / ADC) + 5) / 10; 
+   //Serial.print("battery voltage: ");Serial.println(results);
    return results;
   } // end of getBandgap
