@@ -1087,6 +1087,9 @@ void loop() {
     //}
   }
 #endif // DEEP_SLEEP
+#ifdef PIXEL_ACCENT
+  pixelAccentUpdate();
+#endif
 } //loop
 
 // ====================================================================================
