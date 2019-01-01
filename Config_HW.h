@@ -43,7 +43,7 @@
   #ifndef SINGLEBUTTON
     #define AUX_BUTTON   4
   #endif
-#else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
+#elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
   #define MAIN_BUTTON      12
   #ifndef SINGLEBUTTON
     #define AUX_BUTTON   11 // 2
@@ -86,7 +86,7 @@
 #ifdef DIYINO_PRIME 
   #define MP3_PSWITCH 15 // A1
   #define FTDI_PSWITCH 16 // A2
-#else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3 
+#elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3 
   #define MP3_PSWITCH 17 // A3
   #define FTDI_PSWITCH 16 // A2
 #endif
@@ -106,7 +106,7 @@
     #define LED_RED       3
     #define LED_GREEN       5
     #define LED_BLUE      6
-  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
+  #elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     #define LED_RED       5
     #define LED_GREEN       6
     #define LED_BLUE      9
@@ -152,7 +152,7 @@
     #define LS4       9
     #define LS5       10
     #define LS6       11
-  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
+  #elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     #define LS1       5
     #define LS2       6
     #define LS3      9
@@ -174,7 +174,7 @@
   #ifdef HARD_ACCENT
     #define ACCENT_LED 14 //A0
   #endif
-#else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
+#elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
   #ifdef HARD_ACCENT
     #define ACCENT_LED 14 //A0 is an auxiliary pin on Stardust v2
   #endif

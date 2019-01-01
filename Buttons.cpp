@@ -116,7 +116,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
     else if (ConfigModeSubStates==CS_MAINCOLOR) {
       #ifdef GRAVITY_COLOR
         ColorMixing(storage.sndProfile[storage.soundFont].mainColor,modification,MAX_BRIGHTNESS, SaturateColor);
-      #else if COLOR_PROFILE
+      #elif defined COLOR_PROFILE
         if (ButtonActionType==SINGLE_CLICK){
           confParseValue(modification, 0, 14, incrementSign);
           modification = value;
@@ -133,7 +133,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
     else if (ConfigModeSubStates==CS_CLASHCOLOR) {
       #ifdef GRAVITY_COLOR
         ColorMixing(storage.sndProfile[storage.soundFont].clashColor,modification,MAX_BRIGHTNESS, SaturateColor);
-      #else if COLOR_PROFILE
+      #elif defined COLOR_PROFILE
         if (ButtonActionType==SINGLE_CLICK){
           confParseValue(modification, 0, 14, incrementSign);
           modification = value;
@@ -149,7 +149,7 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
     else if (ConfigModeSubStates==CS_BLASTCOLOR) {
       #ifdef GRAVITY_COLOR
         ColorMixing(storage.sndProfile[storage.soundFont].blasterboltColor,modification,MAX_BRIGHTNESS, SaturateColor);
-      #else if COLOR_PROFILE
+      #elif defined COLOR_PROFILE
         if (ButtonActionType==SINGLE_CLICK){
           confParseValue(modification, 0, 14, incrementSign);
           modification = value;

@@ -20,7 +20,7 @@
   #define NR_CONFIGFOLDERFILES 29
   #define NR_JUKEBOXSONGS 0
   #define NR_FILE_SF 30
-#else if defined DIYINO_STARDUST_V2
+#elif defined DIYINO_STARDUST_V2
   #define SOUNDFONT_QUANTITY 3
   #define NR_CONFIGFOLDERFILES 29
   #define NR_JUKEBOXSONGS 0
@@ -94,7 +94,7 @@ void setID(uint16_t id) {
       this->powerOnTime = 700;
       this->powerOffTime = 1500;
       break;
-  #else if DIYINO_STARDUST_V2
+  #elif DIYINO_STARDUST_V2
     default:
     case 0:
       // soundFont directory 01 :
@@ -134,7 +134,7 @@ void setID(uint16_t id) {
     #define SF_BLASTER_NR 4
     #define SF_MENU_NR 1
     #define SF_HUM_NR 1
-  #else if DIYINO_STARDUST_V2 // 18 files per sound font
+  #elif DIYINO_STARDUST_V2 // 18 files per sound font
     #define SF_BOOT_OFFSET 1
     #define SF_POWERON_OFFSET 2
     #define SF_POWEROFF_OFFSET 3

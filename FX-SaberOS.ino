@@ -95,7 +95,7 @@ VectorInt16 prevDeltAccel;
 #if defined LEDSTRINGS
   #ifdef DIYINO_PRIME
     uint8_t ledPins[] = {LS1, LS2, LS3, LS4, LS5, LS6};
-  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
+  #elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     uint8_t ledPins[] = {LS1, LS2, LS3};
   #endif
   uint8_t blasterPin;
@@ -107,7 +107,7 @@ extern bool fireblade;
 #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
   #ifdef DIYINO_PRIME
     uint8_t ledPins[] = {LS1, LS2, LS3, LS4, LS5, LS6};
-  #else if defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
+  #elif defined DIYINO_STARDUST_V2 or defined DIYINO_STARDUST_V3
     uint8_t ledPins[] = {LS1, LS2, LS3};
   #endif
   WS2812 pixels(NUMPIXELS);
@@ -915,7 +915,7 @@ void loop() {
             // in case of a neopixel blade, show the gravity color on the last 5 pixel of the blade tip
             #ifdef PIXELBLADE
               lightOn(ledPins, -1, currentColor, NUMPIXELS - 5, NUMPIXELS);
-            #else if STAR_LED
+            #elif STAR_LED
             #endif
           #ifdef ADF_PIXIE_BLADE
             if (ConfigModeSubStates == CS_MAINCOLOR) {

@@ -73,7 +73,7 @@ bool fireblade=false;
     //#endif
     #define PIXELSTEP 2 // how many pixel to treat as a group to save on processing capability
     static byte heat[NUMPIXELS/PIXELSTEP];
-  #endif ANIBLADE
+  #endif  // ANIBLADE
 #endif  // PIXELBLADE
 
 
@@ -263,7 +263,7 @@ void RampBlade(uint16_t RampDuration, bool DirectionUpDown, int8_t StartPixel=-1
           }
           pixels.sync(); // Sends the data to the LEDs
         }    
-        #endif ANIBLADE
+        #endif  // ANIBLADE
     } // fireblade
     else { //#else
       for (unsigned int i = StartPixel; i < StopPixel; i = StopPixel*(millis()-ignitionStart)/RampDuration) { // turn on/off the number of LEDs that match rap timing
@@ -950,7 +950,7 @@ void pixelblade_KillKey_Enable() {
   #if defined PIXELBLADE or defined ADF_PIXIE_BLADE
     #ifdef PIXELBLADE
       digitalWrite(DATA_PIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
-    #else if ADF_PIXIE_BLADE
+    #elif ADF_PIXIE_BLADE
       digitalWrite(PIXIEPIN,HIGH); // in order not to back-connect GND over the Data pin to the stripes when the Low-Sides disconnect it
     #endif
     // cut power to the neopixels stripes by disconnecting their GND signal using the LS pins
