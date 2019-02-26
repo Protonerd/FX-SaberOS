@@ -12,6 +12,10 @@
 #if not defined CONFIG_SW_H_
 #define CONFIG_SW_H_
 
+/* INCLUDE_COMPILE_INFO will print the compile date and file location to the serial monitor at boot
+This is useful for keeping track of custom builds or which version has been installed */
+//#define INCLUDE_COMPILE_INFO
+
 
 /*
  * DEFAULT CONFIG PARAMETERS
