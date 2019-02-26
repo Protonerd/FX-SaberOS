@@ -10,7 +10,6 @@
    To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-sa/4.0/.
 */
 /***************************************************************************************************/
-
 #include <Arduino.h>
 #include <I2Cdev.h>
 #include <MPU6050_6Axis_MotionApps20.h>
@@ -186,6 +185,12 @@ void setup() {
 #endif
 	// Serial line for debug
 	Serial.begin(115200);
+#ifdef INCLUDE_COMPILE_INFO
+	const char compile_date[] = __DATE__ " " __TIME__;
+	const char version_file[] = __FILE__;
+	Serial.print(F("version file: "));Serial.println(version_file);
+	Serial.print(F("compiled on: "));Serial.println(compile_date);Serial.println("");
+#endif
 
 	/***** LOAD CONFIG *****/
 	// Get config from EEPROM if there is one
