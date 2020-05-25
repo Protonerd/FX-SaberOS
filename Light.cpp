@@ -1151,6 +1151,7 @@ void BladeMeter (uint8_t ledPins[], int meterLevel) {  //expects input of 0-100
 #endif
 
 #ifdef STAR_LED // light led in gradient from red to green
+  analogWrite(LED_BLUE,0);
   analogWrite(LED_RED, (MAX_BRIGHTNESS * (100 - meterLevel))/255);
   analogWrite(LED_GREEN, (MAX_BRIGHTNESS * meterLevel)/255);
   //Serial.println((MAX_BRIGHTNESS * meterLevel)/255);
