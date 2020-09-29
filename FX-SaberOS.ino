@@ -474,7 +474,7 @@ Serial.println(configAdress);
   lockupButton.setClickTicks(CLICK);
   lockupButton.setPressTicks(PRESS_CONFIG);
   lockupButton.attachClick(lockupClick);
-  //lockupButton.attachDoubleClick(lockupDoubleClick);
+  lockupButton.attachDoubleClick(lockupDoubleClick);
   lockupButton.attachLongPressStart(lockupLongPressStart);
   lockupButton.attachLongPressStop(lockupLongPressStop);
   lockupButton.attachDuringLongPress(lockupLongPress);
