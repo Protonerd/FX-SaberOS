@@ -36,7 +36,11 @@ void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, uint16_
 void lightClashEffect(uint8_t ledPins[], cRGB color={0,0,0});
 
 #ifdef JUKEBOX
-  void JukeBox_Stroboscope(uint8_t ledPins[], cRGB color={0,0,0});
+  #ifdef PIXELBLADE
+    void JukeBox_Stroboscope(cRGB color={0,0,0});
+  #else
+    void JukeBox_Stroboscope(unit8_t ledPins[], cRGB color={0,0,0});
+  #endif
 #endif
 void pixelblade_KillKey_Enable();
 void pixelblade_KillKey_Disable();
