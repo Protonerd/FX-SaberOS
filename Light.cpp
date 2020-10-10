@@ -1230,6 +1230,7 @@ void FoCOff(uint8_t pin) {
 
 
 #ifdef JUKEBOX
+#ifndef PIXELBLADE
 void JukeBox_Stroboscope(uint8_t ledPins[]) {
  uint16_t variation = 0;
  uint16_t temp_variation=0;
@@ -1264,10 +1265,12 @@ void JukeBox_Stroboscope(uint8_t ledPins[]) {
   //delay(50);
 }
 #endif
-
+#endif
 
 
 #ifdef JUKEBOX
+#ifdef PIXELBLADE
+ 
 void JukeBox_Stroboscope(cRGB color) {
 
  uint16_t variation = 0;
@@ -1296,7 +1299,7 @@ void JukeBox_Stroboscope(cRGB color) {
 
 }
 #endif
-
+#endif
 
 #ifdef PIXELBLADE
 #ifdef ANIBLADE
@@ -1623,4 +1626,3 @@ void pixelAccentUpdate() {
   accentPixels.sync();
   #endif
 }
-    
