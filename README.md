@@ -7,7 +7,7 @@ This repository is currently in development.  The currently posted builds should
 
 Installation and configuration instructions are available in the Wiki https://github.com/Protonerd/FX-SaberOS/wiki
 
-For Discussion, FAQ and Troubleshooting please visit the Open Saber forum http://opensaber.proboards.com or join us on Facebook at https://www.facebook.com/groups/FXSaberOS/
+For Discussion, FAQ and Troubleshooting please visit us on Facebook at https://www.facebook.com/groups/FXSaberOS/
 
 ## Recent Important Changes:
 There are now two clash methods.  The original "POLL" method, and a new "INT" method which is less intensive but requires attaching INT on the MPU6050 to D2 of the controller board.
