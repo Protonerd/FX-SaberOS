@@ -186,7 +186,10 @@
 #define DFPLAYER_TX     7
 #define SPK1        20 //A6
 #define SPK2        21 //A7
-
+/*
+ * Uncomment to correct sound issues (e.g. incorrectly looping sounds) when using a DFPlayer clone chip such as the MH2024K-24SS
+ */
+//#define DFPLAYER_CLONE
 
 
 

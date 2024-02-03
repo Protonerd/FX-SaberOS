@@ -496,6 +496,9 @@ Serial.println(configAdress);
   /***** DF PLAYER INITIALISATION  *****/
   InitDFPlayer();
   delay(200);
+  #ifdef DFPLAYER_CLONE
+  delay(800); // clone chip requires more time to initialize
+  #endif   
  // according to debug on 3.11.2017, these 2 lines below cause the sporadic disable of sound. For audio tracker they are not strictly needed.
   //pinMode(SPK1, INPUT);
   //pinMode(SPK2, INPUT);
@@ -1340,6 +1343,10 @@ void HumRelaunch() {
 
 void SinglePlay_Sound(uint8_t track) {
   dfplayer.playPhysicalTrack(track);
+  #ifdef DFPLAYER_CLONE
+  delay(100); 
+  dfplayer.setSingleLoop(false); // fixes incorrect looping of certain sounds on clone chips
+  #endif
 }
 
 void LoopPlay_Sound(uint8_t track) {
