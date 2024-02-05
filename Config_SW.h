@@ -160,6 +160,12 @@ It is important to note that this will take up some memory in proportion the the
   #define COLOR_PROFILE
 #endif
 
+/*
+ * Uncomment to enable a slight color change when performing a swing.
+ * Some clash color is mixed into the main color while swinging.
+ */
+//#define SWING_COLORCHANGE
+
 #define ANIBLADE
 /*
  * Enable Jukebox, an integrated MP3/WAV player which can play songs/music files

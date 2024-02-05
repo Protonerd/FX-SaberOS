@@ -791,8 +791,12 @@ void loop() {
           SinglePlay_Sound(soundFont.getSwing((storage.soundFont)*NR_FILE_SF));
           /* NORMAL SWING */
   
-  
-  
+#ifdef SWING_COLORCHANGE
+          lightSwingEffect(ledPins);
+          if (!fireblade) {
+            delay(SWING_FX_DURATION);  // swing duration
+          }  
+#endif // SWING_COLORCHANGE
   
           if (millis() > sndSuppress and millis() - sndSuppress > SWING_SUPPRESS) {
             sndSuppress = millis();

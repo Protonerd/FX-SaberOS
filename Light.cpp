@@ -1019,6 +1019,18 @@ void lightClashEffect(uint8_t ledPins[], cRGB color) {
   
 }
 
+void lightSwingEffect(uint8_t ledPins[]) {
+  #ifndef LEDSTRINGS
+    if (not fireblade) { 
+      cRGB swingColor; // inject a dash of clash color into main color when swinging
+      swingColor.r=(9 * storage.sndProfile[storage.soundFont].mainColor.r + storage.sndProfile[storage.soundFont].clashColor.r) / 10;
+      swingColor.g=(9 * storage.sndProfile[storage.soundFont].mainColor.g + storage.sndProfile[storage.soundFont].clashColor.g) / 10;
+      swingColor.b=(9 * storage.sndProfile[storage.soundFont].mainColor.b + storage.sndProfile[storage.soundFont].clashColor.b) / 10;
+      lightOn(ledPins, -1, swingColor);
+    }
+  #endif // not LEDSTRINGS
+}
+
 #if defined COLOR_PROFILE and not defined LEDSTRINGS
 void getColorFix(uint8_t colorID) {
   switch (colorID) {
