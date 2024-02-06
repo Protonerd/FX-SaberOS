@@ -34,6 +34,7 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
 void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_BRIGHTNESS, bool Saturate=false);
 void lightBlasterEffect(uint8_t ledPins[], uint8_t pixel, uint8_t range, uint16_t B_time=BLASTER_FX_DURATION, cRGB SndFnt_MainColor={0,0,0});
 void lightClashEffect(uint8_t ledPins[], cRGB color={0,0,0});
+void lightSwingEffect(uint8_t ledPins[]);
 
 #ifdef JUKEBOX
   #ifdef PIXELBLADE

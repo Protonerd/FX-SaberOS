@@ -74,6 +74,11 @@ It is important to note that this will take up some memory in proportion the the
 #define CLASH_DET_MPU_INT
 //#define CLASH_DET_MPU_POLL
  
+/*
+ * Uncomment to enable a very basic (hybrid) smooth swing type effect: modulate the hum in function of rotation speed when moving slower than a swing
+ */
+//#define HUM_MODULATION
+
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
  *  of their respective suppress pareameters
@@ -82,6 +87,9 @@ It is important to note that this will take up some memory in proportion the the
 #define SWING_SUPPRESS     300
 #define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
 #define BLASTERBLOCK_SUPRESS     500
+#ifdef HUM_MODULATION
+  #define HUMMOD_SUPRESS 250 //250
+#endif
 
 /*
  *  HUM_RELAUNCH will tell the state machine to relaunch
@@ -95,6 +103,9 @@ It is important to note that this will take up some memory in proportion the the
 #define CLASH_FX_DURATION 250
 #define BLASTER_FX_DURATION 150
 #define SWING_FX_DURATION 400
+#ifdef HUM_MODULATION
+  #define HUMMOD_FX_DURATION 250 // minimal hum duration
+#endif
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration
 #define SWING_QUATERNION
 
@@ -149,6 +160,12 @@ It is important to note that this will take up some memory in proportion the the
   #define COLOR_PROFILE
 #endif
 
+/*
+ * Uncomment to enable a slight color change when performing a swing.
+ * Some clash color is mixed into the main color while swinging.
+ */
+//#define SWING_COLORCHANGE
+
 #define ANIBLADE
 /*
  * Enable Jukebox, an integrated MP3/WAV player which can play songs/music files
@@ -196,7 +213,7 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
  * For daily use I recommend you comment LS_INFO
  * When you plug your device to USB uncomment LS_INFO !
  */
-#define LS_LOOPLENGHT
+//#define LS_LOOPLENGHT
 #define LS_SERIAL  //enable serial communication using Wire library
 #if defined LS_SERIAL
 //#define LS_FSM

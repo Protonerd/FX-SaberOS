@@ -36,6 +36,10 @@ SoundFont soundFont;
 unsigned long sndSuppress = millis();
 unsigned long sndSuppress2 = millis();
 unsigned long clashSndSuppress = millis();
+#ifdef HUM_MODULATION
+  unsigned long hmStart;
+  unsigned long hmEnd = millis();
+#endif
 #ifdef LS_LOOPLENGHT
   unsigned long loopcurrenttime;
 #endif
@@ -787,8 +791,12 @@ void loop() {
           SinglePlay_Sound(soundFont.getSwing((storage.soundFont)*NR_FILE_SF));
           /* NORMAL SWING */
   
-  
-  
+#ifdef SWING_COLORCHANGE
+          lightSwingEffect(ledPins);
+          if (!fireblade) {
+            delay(SWING_FX_DURATION);  // swing duration
+          }  
+#endif // SWING_COLORCHANGE
   
           if (millis() > sndSuppress and millis() - sndSuppress > SWING_SUPPRESS) {
             sndSuppress = millis();
@@ -812,6 +820,19 @@ void loop() {
       if (millis() > sndSuppress and millis() - sndSuppress > HUM_RELAUNCH and (not hum_playing) and ActionModeSubStates != AS_BLADELOCKUP) {
         HumRelaunch();
       }
+#ifdef HUM_MODULATION
+      // modulate the hum in function of rotation speed when moving slower than a swing
+      bool modulate = max(abs(curRotation.x*1000),max(abs(curRotation.y*1000),abs(curRotation.z*1000))) > 1 // some rotation initiated             
+             and millis() - sndSuppress > SWING_SUPPRESS + HUMMOD_SUPRESS // and not following a swing or reverse swing too closely
+             and millis() - sndSuppress2 > SWING_SUPPRESS + HUMMOD_SUPRESS;     
+      if (hmEnd >= hmStart and modulate and millis() - hmEnd > HUMMOD_SUPRESS) {
+        hmStart=millis();
+        dfplayer.setEqualizer(4);
+      } else if (hmEnd < hmStart and !modulate and millis() - hmStart > HUMMOD_FX_DURATION and millis() - sndSuppress > HUMMOD_FX_DURATION)  {
+        dfplayer.setEqualizer(0);
+        hmEnd=millis();
+      }
+#endif      
       getColor(storage.sndProfile[storage.soundFont].mainColor);
       lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates);
 
@@ -1142,27 +1163,27 @@ inline void motionEngine() {
     // (this lets us immediately read more without waiting for an interrupt)
     mpuFifoCount -= packetSize;
 
-#ifdef SWING_QUATERNION
+#if defined SWING_QUATERNION || defined HUM_MODULATION
     //Making the last orientation the reference for next rotation
     prevOrientation = curOrientation.getConjugate();
-#endif // SWING_QUATERNION
+#endif // SWING_QUATERNION or HUM_MODULATION
     prevAccel = curAccel;
 
     //retrieve current orientation value
-#ifdef SWING_QUATERNION
+#if defined SWING_QUATERNION || defined HUM_MODULATION
     mpu.dmpGetQuaternion(&curOrientation, fifoBuffer);
-#endif // SWING_QUATERNION
+#endif // SWING_QUATERNION or HUM_MODULATION
     mpu.dmpGetAccel(&curAccel, fifoBuffer);
     curDeltAccel.x = prevAccel.x - curAccel.x;
     curDeltAccel.y = prevAccel.y - curAccel.y;
     curDeltAccel.z = prevAccel.z - curAccel.z;
 
-#ifdef SWING_QUATERNION
+#if defined SWING_QUATERNION || defined HUM_MODULATION
     //We calculate the rotation quaternion since last orientation
     prevRotation = curRotation;
     curRotation = prevOrientation.getProduct(
                     curOrientation.getNormalized());
-#endif // SWING_QUATERNION
+#endif // SWING_QUATERNION or HUM_MODULATION
 #if defined LS_MOTION_HEAVY_DEBUG
     // display quaternion values in easy matrix form: w x y z
     printQuaternion(curRotation);
