@@ -968,9 +968,11 @@ void loop() {
               or abs(curDeltAccel.x) > storage.sndProfile[storage.soundFont].swingSensitivity)) {
                 SinglePlay_Sound(soundFont.getSwing((storage.soundFont)*NR_FILE_SF));
               }
+#ifdef BATTERY_CHECK             
     else if (ConfigModeSubStates == CS_BATTERYLEVEL) {
       MonitorBattery();
     }
+#endif    
   } //END CONFIG MODE HANDLER
 
   /*//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1518,6 +1520,8 @@ void Disable_MP3(bool mp3_off) {
   }
   
 }
+
+#ifdef BATTERY_CHECK
 // ====================================================================================
 // ===                         BATTERY CHECKING FUNCTIONS                           ===
 // ====================================================================================
@@ -1586,7 +1590,7 @@ void MonitorBattery() {
     //Serial.println(getBandgap());
   #endif
 }
- 
+
 // Code courtesy of "Coding Badly" and "Retrolefty" from the Arduino forum
 // results are Vcc * 100
 // So for example, 5V would be 500.
@@ -1602,3 +1606,4 @@ int getBandgap ()
    //Serial.print("battery voltage: ");Serial.println(results);
    return results;
   } // end of getBandgap
+#endif
