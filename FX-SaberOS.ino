@@ -464,8 +464,8 @@ Serial.println(configAdress);
 
   // link the Main button functions.
   pinMode(MAIN_BUTTON, INPUT_PULLUP);
-  mainButton.setClickTicks(CLICK);
-  mainButton.setPressTicks(PRESS_CONFIG);
+  mainButton.setClickMs(CLICK);
+  mainButton.setPressMs(PRESS_CONFIG);
   mainButton.attachClick(mainClick);
   mainButton.attachDoubleClick(mainDoubleClick);
   mainButton.attachLongPressStart(mainLongPressStart);
@@ -475,8 +475,8 @@ Serial.println(configAdress);
 #ifndef SINGLEBUTTON
   // link the Lockup button functions.
   pinMode(AUX_BUTTON, INPUT_PULLUP);
-  lockupButton.setClickTicks(CLICK);
-  lockupButton.setPressTicks(PRESS_CONFIG);
+  lockupButton.setClickMs(CLICK);
+  lockupButton.setPressMs(PRESS_CONFIG);
   lockupButton.attachClick(lockupClick);
   lockupButton.attachDoubleClick(lockupDoubleClick);
   lockupButton.attachLongPressStart(lockupLongPressStart);
@@ -1037,6 +1037,20 @@ void loop() {
 #else
     lightOff(ledPins, -1);
 #endif
+
+    if (not mainButton.isIdle()) {
+      // read out the motion sensor in order to be able to detect clashes in Idle Mode for "Quick soundfont selection" through hitting the hilt while pressing the main button
+      motionEngine();
+      if ((mpuIntStatus > 60 and mpuIntStatus < 70) and (millis() - sndSuppress >= CLASH_SUPRESS)) {
+        sndSuppress = millis();
+        #if defined LS_DEBUG
+          Serial.println("Quick soundfont selection");
+        #endif
+        ConfigModeSubStates=CS_SOUNDFONT; // simulate soundfont selection through menu
+        ConfigMenuButtonEventHandler(false, SINGLE_CLICK, 1);       
+        QuickSelectButtonEventHandler(); // ensure we don't enter config menu once a clash has been detected
+      }
+    }
 
     accentLEDControl(AL_ON);
     #if defined DEEP_SLEEP and SLEEPYTIME>5000

@@ -32,6 +32,7 @@ void lockupLongPressStop();
 #endif
 
 void ConfigMenuButtonEventHandler(bool SaturateColor,ButtonActionEnum ButtonActionType, int8_t incrementSign=1);
+void QuickSelectButtonEventHandler();
 
 #endif /* BUTTONS_H_ */
 

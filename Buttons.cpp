@@ -66,6 +66,7 @@ extern void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
     short int multiplier);
 extern uint8_t GravityVector();
 extern void FX_BlasterBlock();
+bool quickselect_active=false;
 
 extern struct StoreStruct {
   // This is for mere detection if they are our settings
@@ -194,6 +195,10 @@ void ConfigMenuButtonEventHandler(bool SaturateColor, ButtonActionEnum ButtonAct
       #endif
       BladeMeter(ledPins, (storage.sndProfile[storage.soundFont].swingSensitivity)/100);     
     }
+}
+
+void QuickSelectButtonEventHandler(){
+  quickselect_active=true;
 }
 
 void mainClick() {
@@ -389,12 +394,14 @@ void mainLongPressStart() {
 
 #ifdef SINGLEBUTTON
   else if (SaberState==S_STANDBY) {
-    //Entering Config Mode
-    SaberState=S_CONFIG;
-    PrevSaberState=S_STANDBY; 
-    #ifdef PIXELBLADE 
-      pixelblade_KillKey_Enable();     
-    #endif
+    if (not quickselect_active) {
+      //Entering Config Mode
+      SaberState=S_CONFIG;
+      PrevSaberState=S_STANDBY; 
+      #ifdef PIXELBLADE 
+        pixelblade_KillKey_Enable();     
+      #endif
+    }
 	}
 #endif
 } // mainLongPressStart
@@ -418,6 +425,7 @@ void mainLongPressStop() {
 #if defined LS_BUTTON_DEBUG
 	Serial.println(F("Main button longPress stop"));
 #endif
+  quickselect_active=false;
 } // mainLongPressStop
 
 #ifndef SINGLEBUTTON
