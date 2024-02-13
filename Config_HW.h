@@ -20,9 +20,9 @@
  *  If you have a home-brew solution using the Arduino Nano, choose DIYINO_PRIME below
  */
 
-//#define DIYINO_PRIME // including home-brew
+#define DIYINO_PRIME // including home-brew
 //#define DIYINO_STARDUST_V2
-#define DIYINO_STARDUST_V3
+//#define DIYINO_STARDUST_V3
 
 /***** BOARD PINOUT DEFINITIONS ******/
 
@@ -189,8 +189,14 @@
 /*
  * Uncomment to correct sound issues (e.g. incorrectly looping sounds) when using a DFPlayer clone chip such as the MH2024K-24SS
  */
-//#define DFPLAYER_CLONE
-
+#define DFPLAYER_CLONE
+/*
+ * Some DFPlayer versions cannot handle commands sent at high frequency, so ensure a minimum delay between commands.
+ * Increase if you notice certain sounds not being played, but don't set too high or sounds and effects will become less responsive.
+ */
+#ifdef DFPLAYER_CLONE
+  #define DFPLAYER_OPERATING_DELAY 125 //125 (ms)
+#endif
 
 
 #define BATTERY_CHECK // comment to disable

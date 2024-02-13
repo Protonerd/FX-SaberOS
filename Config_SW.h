@@ -77,7 +77,7 @@ It is important to note that this will take up some memory in proportion the the
 /*
  * Uncomment to enable a very basic (hybrid) smooth swing type effect: modulate the hum in function of rotation speed when moving slower than a swing
  */
-//#define HUM_MODULATION
+#define SMOOTH_SWING
 
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
@@ -87,8 +87,8 @@ It is important to note that this will take up some memory in proportion the the
 #define SWING_SUPPRESS     300
 #define CLASH_SUPRESS     400  // do not modify below 400, otherwise interlocking clash sounds can occur
 #define BLASTERBLOCK_SUPRESS     500
-#ifdef HUM_MODULATION
-  #define HUMMOD_SUPRESS 250 //250
+#ifdef SMOOTH_SWING
+  #define SMOOTH_SWING_SUPRESS 250 //250
 #endif
 
 /*
@@ -103,8 +103,8 @@ It is important to note that this will take up some memory in proportion the the
 #define CLASH_FX_DURATION 250
 #define BLASTER_FX_DURATION 150
 #define SWING_FX_DURATION 400
-#ifdef HUM_MODULATION
-  #define HUMMOD_FX_DURATION 250 // minimal hum duration
+#ifdef SMOOTH_SWING
+  #define SMOOTH_SWING_FX_DURATION 250 //250 //minimal hum duration
 #endif
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration
 #define SWING_QUATERNION

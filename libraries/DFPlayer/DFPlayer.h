@@ -47,16 +47,6 @@ class DFPlayer {
 	 * Further reverse engineering to come on those.
 	 */
 
-	/* OPERATING_DELAY
-	 * Uncompressible delay needed for the DFPlayer to receive and apply commands correctly
-	 * in milliseconds
-	 * if this delay is reduced:
-	 * - at best your DFPlayer won't handle the mp3Serial line correctly
-	 *   resulting in unpredictable behaviour.
-	 * - at worse it may crash the DFPlayer that will require a reset
-	 * */
-//#define OPERATING_DELAY 155
-
 	/*
 	 * DFPLAYER COMMANDS
 	 */
@@ -169,6 +159,10 @@ public:
 		this->device = device;
 	}
 
+	inline void setOperatingDelay(uint16_t operatingDelay) {
+		this->operatingDelay = operatingDelay;
+	}
+    
 	inline bool isNoReceiveBit() const {
 		return this->noReceiveBit;
 	}
@@ -257,9 +251,17 @@ public:
 #ifdef DFPLAYER_HEAVY_DEBUG
 		printSendBuffer();
 #endif
+
+		if (operatingDelay>0) {      
+            long waitTime = operatingDelay - (millis() - lastSentMs);
+            if (waitTime>0) {
+                delay(waitTime);
+            }            
+            lastSentMs = millis();
+		}       
+
 		//	if (this->isEmptyQueue()) {
 		this->mp3Serial->write(this->sendBuffer, DFPLAYER_BUFFER_LENGTH);
-	//	delay(OPERATING_DELAY);
 
 #ifdef DFPLAYER_DEBUG
 		printHumanReadableSendBuffer();
@@ -318,12 +320,9 @@ public:
 	}
 
 	inline void setSingleLoop(bool value) {
-		//delay(OPERATING_DELAY);
 		setSendBuffer(SINGLE_REPEAT, !value);  // !value o_0 ?
 		// this command never receive an answer !
 		send();
-		//delay(OPERATING_DELAY);
-
 	}
 
 	inline void playSingleLoop(uint8_t track, uint8_t folder = 0) {
@@ -593,7 +592,7 @@ public:
 	}
 	inline void getStatus() {
 		setSendBuffer(STATUS);
-		send();
+		send();       
 	}
 	inline uint16_t countTotalFiles() {
 		uint8_t command;
@@ -628,6 +627,17 @@ private:
 	uint8_t recvBuffer[10];
 	uint8_t device;
 	uint8_t fifoCount;bool noReceiveBit;
+	unsigned long lastSentMs;                           //timestamp of last command sent
+    /* OPERATING_DELAY
+	 * Uncompressible delay needed for the DFPlayer to receive and apply commands correctly
+	 * in milliseconds. The needed delay depends on the DFPlayer version.
+	 * If this delay is reduced below the required threshold:
+	 * - at best your DFPlayer won't handle the mp3Serial line correctly
+	 *   resulting in unpredictable behaviour.
+	 * - at worse it may crash the DFPlayer that will require a reset
+	 * */
+    uint16_t operatingDelay; 
+    
  bool querying;
 };
 #endif // _DFPLAYER_H_
