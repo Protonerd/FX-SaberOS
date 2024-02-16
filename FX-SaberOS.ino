@@ -15,7 +15,6 @@
 #include <MPU6050_6Axis_MotionApps20.h>
 #include <EEPROMex.h>
 #include <OneButton.h>
-#include <LinkedList.h>
 #include <avr/wdt.h>
 
 #include "Buttons.h"
@@ -27,8 +26,6 @@
 /*
 * DFPLAYER variables
 */
-
-#include <DFPlayerSerial.h>
 #include <DFPlayer.h>
 DFPlayer dfplayer;
 
@@ -36,9 +33,11 @@ SoundFont soundFont;
 unsigned long sndSuppress = millis();
 unsigned long sndSuppress2 = millis();
 unsigned long clashSndSuppress = millis();
-#ifdef HUM_MODULATION
-  unsigned long hmStart;
-  unsigned long hmEnd = millis();
+#ifdef SMOOTH_SWING
+  unsigned long ssStart;
+  unsigned long ssEnd = millis();
+  unsigned long ssVolRevisionMs; 
+  uint8_t ssVolIncrease;
 #endif
 #ifdef LS_LOOPLENGHT
   unsigned long loopcurrenttime;
@@ -506,19 +505,13 @@ Serial.println(configAdress);
  // according to debug on 3.11.2017, these 2 lines below cause the sporadic disable of sound. For audio tracker they are not strictly needed.
   //pinMode(SPK1, INPUT);
   //pinMode(SPK2, INPUT);
-  SinglePlay_Sound(soundFont.getBoot());//11);
-  delay(20);
-  if (storage.volume <= 15) {
-    Set_Volume(15);
-    delay(200);
-  }
+  SinglePlay_Sound(soundFont.getBoot((storage.soundFont)*NR_FILE_SF));//11);
   
 #ifdef ADF_PIXIE_BLADE
   InitAdafruitPixie(ledPins);
 #endif
-  SinglePlay_Sound(11);
-  delay(850);
-
+  //SinglePlay_Sound(11);
+  //delay(850);
 
   /***** Quick Mute *****/
   if (digitalRead(MAIN_BUTTON) == LOW) {
@@ -537,15 +530,12 @@ Serial.println(configAdress);
     sleepTimer = millis();
   #endif
 
-  Set_Volume(storage.volume);
-
 } // end setup
 
 // ====================================================================================
 // ===               	   			LOOP ROUTINE  	 	                			===
 // ====================================================================================
 void loop() {
-
  // pat the dog
   wdt_reset(); // do not remove!!!
  
@@ -820,17 +810,33 @@ void loop() {
       if (millis() > sndSuppress and millis() - sndSuppress > HUM_RELAUNCH and (not hum_playing) and ActionModeSubStates != AS_BLADELOCKUP) {
         HumRelaunch();
       }
-#ifdef HUM_MODULATION
-      // modulate the hum in function of rotation speed when moving slower than a swing
-      bool modulate = max(abs(curRotation.x*1000),max(abs(curRotation.y*1000),abs(curRotation.z*1000))) > 1 // some rotation initiated             
-             and millis() - sndSuppress > SWING_SUPPRESS + HUMMOD_SUPRESS // and not following a swing or reverse swing too closely
-             and millis() - sndSuppress2 > SWING_SUPPRESS + HUMMOD_SUPRESS;     
-      if (hmEnd >= hmStart and modulate and millis() - hmEnd > HUMMOD_SUPRESS) {
-        hmStart=millis();
-        dfplayer.setEqualizer(4);
-      } else if (hmEnd < hmStart and !modulate and millis() - hmStart > HUMMOD_FX_DURATION and millis() - sndSuppress > HUMMOD_FX_DURATION)  {
-        dfplayer.setEqualizer(0);
-        hmEnd=millis();
+
+#ifdef SMOOTH_SWING
+      uint8_t minVolRevisionInterval = 150; // revise volume every 150ms
+      #ifdef DFPLAYER_CLONE
+        minVolRevisionInterval = max(minVolRevisionInterval, DFPLAYER_OPERATING_DELAY); // don't change volume more frequently than DFPlayer can handle
+      #endif      
+      uint8_t maxCurRotation = max(abs(curRotation.x*1000),max(abs(curRotation.y*1000),abs(curRotation.z*1000)));
+      bool modulate = maxCurRotation > 1 // some rotation initiated             
+             and millis() - sndSuppress > SWING_SUPPRESS + SMOOTH_SWING_SUPRESS // and not following a swing or reverse swing too closely
+             and millis() - sndSuppress2 > SWING_SUPPRESS + SMOOTH_SWING_SUPRESS;     
+      if (ssEnd >= ssStart and modulate and millis() - ssEnd > SMOOTH_SWING_SUPRESS) { // SMOOTH SWING START
+        ssStart=millis();
+        Set_Equalizer(4); // change pitch
+        ssVolIncrease=0;
+        ssVolRevisionMs=millis();
+      } else if (ssEnd < ssStart and !modulate and millis() - ssStart > SMOOTH_SWING_FX_DURATION and millis() - ssVolRevisionMs > minVolRevisionInterval)  { // SMOOTH SWING END (PHASE 1)
+        Set_Equalizer(0); // reset equalizer
+        ssVolRevisionMs=millis();
+        ssEnd=millis();
+      } else if (ssEnd < ssStart and millis() - ssVolRevisionMs > minVolRevisionInterval) { // SMOOTH SWING ONGOING
+        ssVolIncrease = constrain(maxCurRotation,max(0,ssVolIncrease-1),min(5,ssVolIncrease+1)); // revise volume (up to 5 levels)
+        Set_Volume(constrain(storage.volume+ssVolIncrease,storage.volume,30));
+        ssVolRevisionMs=millis();
+      } else if (ssEnd >= ssStart and ssVolIncrease>0 and millis() - ssVolRevisionMs > minVolRevisionInterval) { // SMOOTH SWING END (PHASE 2)
+        Set_Volume(storage.volume); // reset volume
+        ssVolIncrease=0;
+        ssEnd=millis();
       }
 #endif      
       getColor(storage.sndProfile[storage.soundFont].mainColor);
@@ -1179,32 +1185,31 @@ inline void motionEngine() {
     // (this lets us immediately read more without waiting for an interrupt)
     mpuFifoCount -= packetSize;
 
-#if defined SWING_QUATERNION || defined HUM_MODULATION
+#if defined SWING_QUATERNION || defined SMOOTH_SWING
     //Making the last orientation the reference for next rotation
     prevOrientation = curOrientation.getConjugate();
-#endif // SWING_QUATERNION or HUM_MODULATION
+#endif // SWING_QUATERNION or SMOOTH_SWING
     prevAccel = curAccel;
 
     //retrieve current orientation value
-#if defined SWING_QUATERNION || defined HUM_MODULATION
+#if defined SWING_QUATERNION || defined SMOOTH_SWING
     mpu.dmpGetQuaternion(&curOrientation, fifoBuffer);
-#endif // SWING_QUATERNION or HUM_MODULATION
+#endif // SWING_QUATERNION or SMOOTH_SWING
     mpu.dmpGetAccel(&curAccel, fifoBuffer);
     curDeltAccel.x = prevAccel.x - curAccel.x;
     curDeltAccel.y = prevAccel.y - curAccel.y;
     curDeltAccel.z = prevAccel.z - curAccel.z;
 
-#if defined SWING_QUATERNION || defined HUM_MODULATION
+#if defined SWING_QUATERNION || defined SMOOTH_SWING
     //We calculate the rotation quaternion since last orientation
     prevRotation = curRotation;
     curRotation = prevOrientation.getProduct(
                     curOrientation.getNormalized());
-#endif // SWING_QUATERNION or HUM_MODULATION
+#endif // SWING_QUATERNION or SMOOTH_SWING
 #if defined LS_MOTION_HEAVY_DEBUG
     // display quaternion values in easy matrix form: w x y z
     printQuaternion(curRotation);
 #endif
-
   }
 } //motionEngine
 
@@ -1380,10 +1385,9 @@ void HumRelaunch() {
 
 void SinglePlay_Sound(uint8_t track) {
   dfplayer.playPhysicalTrack(track);
-  #ifdef DFPLAYER_CLONE
-  delay(100); 
+#ifdef DFPLAYER_CLONE
   dfplayer.setSingleLoop(false); // fixes incorrect looping of certain sounds on clone chips
-  #endif
+#endif
 }
 
 void LoopPlay_Sound(uint8_t track) {
@@ -1391,20 +1395,25 @@ void LoopPlay_Sound(uint8_t track) {
 }
 
 void Set_Volume(int8_t volumeSet) {
-  dfplayer.setVolume(volumeSet); // Too Slow: we'll change volume on exit
-  delay(50);
+  dfplayer.setVolume(volumeSet);
+}
+
+void Set_Equalizer(int8_t eq) {
+  dfplayer.setEqualizer(eq);
 }
 
 void Set_Loop_Playback() {
-  dfplayer.setSingleLoop(true);;
+  dfplayer.setSingleLoop(true);
 }
 
 void InitDFPlayer() {
+#ifdef DFPLAYER_CLONE
+  dfplayer.setOperatingDelay(DFPLAYER_OPERATING_DELAY);
+#endif
   dfplayer.setSerial(DFPLAYER_TX, DFPLAYER_RX);
 }
 
 void Pause_Sound() {
-
   dfplayer.pause();
 }
 
