@@ -43,7 +43,9 @@ extern void Disable_MP3(bool mp3_off);
 extern void confParseValue(uint16_t variable, uint16_t min, uint16_t max,
     short int multiplier);
 extern uint8_t GravityVector();
+#ifdef BATTERY_CHECK
 extern void BatLevel_ConfigEnter();
+#endif
 
 extern struct StoreStruct {
   // This is for mere detection if they are our settings
@@ -187,12 +189,14 @@ void NextConfigState(){
         SinglePlay_Sound(29);
         delay(500);
         break;   
+#ifdef BATTERY_CHECK        
       case CS_BATTERYLEVEL: 
         #if defined LS_FSM
           Serial.print(F("Display battery level"));
         #endif        
         BatLevel_ConfigEnter();
         break;   
+#endif        
       case CS_STORAGEACCESS: 
         #if defined LS_FSM
           Serial.print(F("USB Media storage access"));
