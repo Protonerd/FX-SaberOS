@@ -122,6 +122,8 @@ extern bool fireblade;
 #endif
 uint8_t clash = 0;
 bool lockuponclash = false;
+bool tipmeltonclash = false;
+long tipmeltStart;
 uint8_t randomBlink = 0;
 /***************************************************************************************************
  * Buttons variables
@@ -467,6 +469,7 @@ Serial.println(configAdress);
   mainButton.setPressMs(PRESS_CONFIG);
   mainButton.attachClick(mainClick);
   mainButton.attachDoubleClick(mainDoubleClick);
+  mainButton.attachMultiClick(mainMultiClick);
   mainButton.attachLongPressStart(mainLongPressStart);
   mainButton.attachLongPressStop(mainLongPressStop);
   mainButton.attachDuringLongPress(mainLongPress);
@@ -633,7 +636,7 @@ void loop() {
        using the motion interrupt feature of the MPU6050.
     */
     #ifdef CLASH_DET_MPU_POLL
-      if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP) {
+      if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP and ActionModeSubStates != AS_TIPMELT) {
         FX_Clash();
       }
     #endif // CLASH_DET_MPU_POLL
@@ -673,10 +676,10 @@ void loop() {
        since IMUs sucks at determining relative position in space
     */
     else if (
-      (not fireblade) and (ActionModeSubStates != AS_BLADELOCKUP
+      (not fireblade) and ((ActionModeSubStates != AS_BLADELOCKUP and ActionModeSubStates != AS_TIPMELT)
       #ifdef SWING_QUATERNION
-        or lockuponclash// end lockuponclash event on a swing, but only if swings are calculated based on quaternions, otherwise swings will
-                          // interrut the lockup uncontrollably
+        or lockuponclash  // end lockuponclash and tipmeltonclash events on a swing, but only if swings are calculated based on quaternions, otherwise swings will
+        or tipmeltonclash // interrut the lockup/tipmelt uncontrollably
       #endif
       )
 #ifndef SWING_QUATERNION
@@ -762,7 +765,7 @@ void loop() {
 #endif
        #ifdef CLASH_DET_MPU_POLL
         motionEngine();
-        if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP) {
+        if (mpuIntStatus > 60 and mpuIntStatus < 70 and ActionModeSubStates != AS_BLADELOCKUP and ActionModeSubStates != AS_TIPMELT) {
           SinglePlay_Sound(soundFont.getClash((storage.soundFont)*NR_FILE_SF));
           sndSuppress = millis();
           sndSuppress2 = millis();
@@ -800,14 +803,14 @@ void loop() {
       }
     }
     else { // simply flicker
-      if (ActionModeSubStates != AS_BLASTERDEFLECTMOTION and ActionModeSubStates != AS_BLADELOCKUP) { // do not deactivate blaster move deflect mode in case the saber is idling
+      if (ActionModeSubStates != AS_BLASTERDEFLECTMOTION and ActionModeSubStates != AS_BLADELOCKUP and ActionModeSubStates != AS_TIPMELT) { // do not deactivate blaster move deflect mode in case the saber is idling
         ActionModeSubStates = AS_HUM;
       }
       else if (ActionModeSubStates == AS_BLASTERDEFLECTMOTION) {
         accentLEDControl(AL_PULSE);
       }
       // relaunch hum if more than HUM_RELAUNCH time elapsed since entering AS_HUM state
-      if (millis() > sndSuppress and millis() - sndSuppress > HUM_RELAUNCH and (not hum_playing) and ActionModeSubStates != AS_BLADELOCKUP) {
+      if (millis() > sndSuppress and millis() - sndSuppress > HUM_RELAUNCH and (not hum_playing) and ActionModeSubStates != AS_BLADELOCKUP and ActionModeSubStates != AS_TIPMELT) {
         HumRelaunch();
       }
 
@@ -842,7 +845,7 @@ void loop() {
       getColor(storage.sndProfile[storage.soundFont].mainColor);
       lightFlicker(ledPins, storage.sndProfile[storage.soundFont].flickerType, 0, storage.sndProfile[storage.soundFont].mainColor, storage.sndProfile[storage.soundFont].clashColor, ActionModeSubStates);
 
-      if (lockuponclash) {
+      if (lockuponclash or tipmeltonclash) {
         accentLEDControl(AL_PULSE);
       }
     }
@@ -1273,6 +1276,13 @@ void FX_Clash() {
           //if (ActionModeSubStates==AS_PREBLADELOCKUP or lockuponclash) {
           //Lockup Start
           ActionModeSubStates = AS_BLADELOCKUP;
+          if (soundFont.getLockup((storage.soundFont)*NR_FILE_SF)) {
+            LoopPlay_Sound(soundFont.getLockup((storage.soundFont)*NR_FILE_SF));
+          }
+        } else if (tipmeltonclash) {
+          //Tipmelt Start
+          tipmeltStart=millis();
+          ActionModeSubStates = AS_TIPMELT;
           if (soundFont.getLockup((storage.soundFont)*NR_FILE_SF)) {
             LoopPlay_Sound(soundFont.getLockup((storage.soundFont)*NR_FILE_SF));
           }

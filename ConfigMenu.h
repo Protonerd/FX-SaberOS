@@ -15,7 +15,7 @@
 #include <WS2812.h>
 
 enum SaberStateEnum {S_STANDBY, S_SABERON, S_CONFIG, S_SLEEP, S_JUKEBOX};
-enum ActionModeSubStatesEnum {AS_HUM, AS_IGNITION, AS_RETRACTION, AS_BLADELOCKUP, AS_PREBLADELOCKUP, AS_BLASTERDEFLECTMOTION, AS_BLASTERDEFLECTPRESS, AS_CLASH, AS_SWING, AS_SPIN, AS_FORCE, AS_LASTMEMBER}; // never delete AS_LASTMEMBER!!! Needed to calculate number of elements in the enum type!!!
+enum ActionModeSubStatesEnum {AS_HUM, AS_IGNITION, AS_RETRACTION, AS_BLADELOCKUP, AS_PREBLADELOCKUP, AS_TIPMELT, AS_BLASTERDEFLECTMOTION, AS_BLASTERDEFLECTPRESS, AS_CLASH, AS_SWING, AS_SPIN, AS_FORCE, AS_LASTMEMBER}; // never delete AS_LASTMEMBER!!! Needed to calculate number of elements in the enum type!!!
 
 // configure the config menu based on the blade type
 #if defined LEDSTRINGS

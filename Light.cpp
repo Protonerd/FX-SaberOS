@@ -25,6 +25,8 @@ extern ConfigModeSubStatesEnum PrevConfigModeSubStates;
 //extern SubStateEnum SubState;
 
 extern bool lockuponclash;
+extern bool tipmeltonclash;
+extern long tipmeltStart;
 extern int8_t modification;
 
 extern struct StoreStruct {
@@ -53,6 +55,7 @@ extern uint8_t ledPins[];
 #define SAMPLESIZEAVERAGE 30
 #endif
 
+const uint8_t TIP_PIXELS=25; // the number of pixels to animate in tipmelt mode
 bool fireblade=false;
 
 #ifdef PIXELBLADE // FIREBLADE
@@ -632,7 +635,12 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
   #ifdef PIXELBLADE
       if (StartPixel == -1 or StopPixel==-1 or StopPixel<StartPixel or StartPixel>NUMPIXELS or StopPixel>NUMPIXELS) {  // if neither start nor stop is defined or invalid range, go through the whole stripe    // neopixel ramp code from jbkuma
         StartPixel=0;
-        StopPixel= NUMPIXELS; 
+        #ifdef TIP_MELT        
+        if (AState==AS_TIPMELT)
+          StopPixel=NUMPIXELS-TIP_PIXELS;
+        else
+        #endif
+          StopPixel=NUMPIXELS; 
       }
       int flickFactor = random(0,255);
       if (flickFactor > 3 && flickFactor < 170) { flickFactor = 255; }
@@ -640,8 +648,6 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       brightness = flickFactor;
       cRGB color;
 
-
-      
       switch (type) {
         default:
         case 0:
@@ -720,7 +726,7 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       case 2: // fire blade red
         if (fireblade) { // #ifdef FIREBLADE
           #ifdef ANIBLADE
-          if (AState==AS_BLADELOCKUP) {
+          if (AState==AS_BLADELOCKUP or AState==AS_TIPMELT) {
             Fire_Cooling=150;
             Fire_Sparking=50;
           }
@@ -736,7 +742,7 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
       case 3: // fire blade green
         if (fireblade) { // #ifdef FIREBLADE
           #ifdef ANIBLADE
-          if (AState==AS_BLADELOCKUP) {
+          if (AState==AS_BLADELOCKUP or AState==AS_TIPMELT) {
             Fire_Cooling=200;
             Fire_Sparking=70;
           }
@@ -753,7 +759,7 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
         if (fireblade) { // #ifdef FIREBLADE
           #ifdef ANIBLADE
         
-          if (AState==AS_BLADELOCKUP) {
+          if (AState==AS_BLADELOCKUP or AState==AS_TIPMELT) {
             Fire_Cooling=100;
             Fire_Sparking=20;
           }
@@ -784,9 +790,71 @@ void lightFlicker(uint8_t ledPins[],uint8_t type, uint8_t value = 0,cRGB maincol
         break;
 
     }
-    //} // #endif
+  #ifdef TIP_MELT
+    if (AState==AS_TIPMELT) { //animate blade tip in tipmelt mode
+      Fire_Cooling = 55;
+      Fire_Sparking = 120;
+      static byte heat[TIP_PIXELS];
+      int cooldown;    
+      // Cool down every cell a little
+      for( int i = 0; i < TIP_PIXELS; i++) {
+        cooldown = random(0, ((Fire_Cooling * 10) / TIP_PIXELS) + 2);
+      
+        if(cooldown>heat[i]) {
+          heat[i]=0;
+        } else {
+          heat[i]=heat[i]-cooldown;
+        }
+      }
+      // Heat from each cell drifts 'up' and diffuses a little
+      for(int k= TIP_PIXELS - 1; k >= 2; k--) {
+        heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+      }
+      // Randomly ignite new 'sparks' near the bottom
+      if(random(255) < Fire_Sparking) {
+        int y = random(7);
+        heat[y] = heat[y] + random(160,255);
+      }
+  
+      int flickRange = 3 + constrain((millis()-tipmeltStart)/1000,0,100); // gradually increase fire effect over time
+      int flick = random(0,flickRange); 
+      for (uint16_t i = 0; i <= TIP_PIXELS; i++) { // flash clash color           
+        cRGB tipcolor;
+        if (flick < 2) { // clash color
+          color.r = brightness * clashcolor.r / rgbFactor;
+          color.g = brightness * clashcolor.g / rgbFactor;
+          color.b = brightness * clashcolor.b / rgbFactor;
+          if (i>=5)
+            tipcolor = CombineColors(maincolor,color,i*100/TIP_PIXELS); // gradient into main color
+          else
+            tipcolor = color;
+        } else if (flick == 2) { // flash white
+          color.r = MAX_BRIGHTNESS;
+          color.g = MAX_BRIGHTNESS;
+          color.b = MAX_BRIGHTNESS;
+          if (i>=5)
+            tipcolor = CombineColors(maincolor,color,i*100/TIP_PIXELS); // gradient into main color
+          else
+            tipcolor = color;
+        } else  { // gradually heaten up the tip and show flame effect
+            tipcolor = HeatColor(heat[i], 0);    
+        }
+        pixels.set_crgb_at(NUMPIXELS-i, tipcolor); 
+      }
+      pixels.sync();
+    }    
+  #endif // TIP_MELT
+
   #endif
 } // lightFlicker
+
+cRGB CombineColors(cRGB color1, cRGB color2, int8_t percentage1) {
+  cRGB color;
+  color.r = (percentage1*color1.r + (100-percentage1)*color2.r)/100;
+  color.g = (percentage1*color1.g + (100-percentage1)*color2.g)/100;
+  color.b = (percentage1*color1.b + (100-percentage1)*color2.b)/100;
+  return color;
+}
 
 void ColorMixing(cRGB colorID={0,0,0}, int8_t mod=-1, uint8_t maxBrightness=MAX_BRIGHTNESS, bool Saturate=false) {
   #if defined LEDSTRINGS
