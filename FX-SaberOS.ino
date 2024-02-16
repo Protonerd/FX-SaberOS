@@ -286,7 +286,7 @@ Serial.println(configAdress);
   // load and configure the DMP
   Serial.println(F("Initializing DMP..."));
 #endif
-  devStatus = mpu.dmpInitialize_light();  // this is a ligter version of the above
+  devStatus = mpu.dmpInitialize();
 
   /*
      Those offsets are specific to each MPU6050 device.
