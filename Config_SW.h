@@ -112,9 +112,9 @@ It is important to note that this will take up some memory in proportion the the
 /*
  * BUTTONS PARAMETERS
  ************************************/
-#define CLICK        200 //5    // ms you need to press a button to be a click
-#define PRESS_ACTION    600 //200  // ms you need to press a button to be a long press, in action mode
-#define PRESS_CONFIG    600 //400  // ms you need to press a button to be a long press, in config mode
+#define CLICK           200 //200  // ms you need to press a button to be a click
+#define PRESS_ACTION    400 //400  // ms you need to press a button to be a long press, in action mode
+#define PRESS_CONFIG    600 //600  // ms you need to press a button to be a long press, in idle or config mode
 /************************************/
 
 
