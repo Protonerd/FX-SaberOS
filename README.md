@@ -13,4 +13,4 @@ For Discussion, FAQ and Troubleshooting please visit us on Facebook at https://w
 * There are now two clash methods.  The original "POLL" method, and a new "INT" method which is less intensive but requires attaching INT on the MPU6050 to D2 of the controller board.
 https://github.com/Protonerd/FX-SaberOS/wiki/Clash-Method
 
-* Several libraries have been updated (I2Cdev, MPU6050, OneButton, DFPlayer).  If you're updating from a previous build, make sure to replace the old libraries with the new ones. In case of compilation errors when using Arduino IDE 2.x: close the IDE, clear the cache (on Windows by default under "C:\Users\[your_username]\AppData\Local\Temp") and relaunch.
+* Several libraries have been updated (I2Cdev, MPU6050, OneButton, DFPlayer).  If you're updating from a previous build, make sure to replace the old libraries with the new ones. In case of compilation errors when using Arduino IDE 2.x: close the IDE, clear the cache (on Windows by default under "C:\Users\\<your_username>\AppData\Local\Temp") and relaunch.
