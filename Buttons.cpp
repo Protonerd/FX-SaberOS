@@ -37,6 +37,7 @@ extern bool jukebox_play;
 extern uint8_t jb_track;
 #endif
 extern bool lockuponclash;
+extern bool tipmeltonclash;
 extern bool changeMenu;
 extern uint8_t menu;
 extern bool enterMenu;
@@ -224,12 +225,13 @@ void mainClick() {
       ActionModeSubStates=AS_HUM;
       accentLEDControl(AL_ON);
     }
-    if (lockuponclash) {
+    if (lockuponclash or tipmeltonclash) {
       HumRelaunch();
       ActionModeSubStates = AS_HUM;
       lockuponclash=false;
+      tipmeltonclash=false;
       #if defined LS_BUTTON_DEBUG
-            Serial.println(F("End clash triggered lockup (either pre or active phase)"));
+            Serial.println(F("End clash triggered lockup/tipmelt (either pre or active phase)"));
       #endif  
     } 
   }
@@ -303,12 +305,13 @@ void mainDoubleClick() {
 #endif
 #ifdef SINGLEBUTTON
 	if (SaberState==S_SABERON) {
-    if (lockuponclash) {
+    if (lockuponclash or tipmeltonclash) {
       HumRelaunch();
       ActionModeSubStates = AS_HUM;
       lockuponclash=false;
+      tipmeltonclash=false;
       #if defined LS_BUTTON_DEBUG
-            Serial.println(F("End clash triggered lockup (either pre or active phase)"));
+            Serial.println(F("End clash triggered lockup/tipmelt (either pre or active phase)"));
       #endif  
     }
     else if (ActionModeSubStates == AS_HUM) {
@@ -338,8 +341,54 @@ void mainDoubleClick() {
   }
 #endif  // JUKEBOX
 #else  // not SINGLEBUTTON
+#ifdef TIP_MELT
+	if (SaberState==S_SABERON) {
+    if (lockuponclash or tipmeltonclash) {
+      HumRelaunch();
+      ActionModeSubStates = AS_HUM;
+      lockuponclash=false;
+      tipmeltonclash=false;
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("End clash triggered lockup/tipmelt (either pre or active phase)"));
+      #endif  
+    }
+    else if (ActionModeSubStates == AS_HUM) {
+      tipmeltonclash=true;
+#if defined LS_BUTTON_DEBUG
+      Serial.println(F("Start clash triggered tipmelt"));
+#endif 
+    }
+  } 
+#endif // TIP_MELT
 #endif  // SINGLEBUTTON
 } // mainDoubleClick
+
+void mainMultiClick() {
+#if defined LS_BUTTON_DEBUG
+	Serial.println(F("Main button multi click."));
+#endif
+#ifdef SINGLEBUTTON
+#ifdef TIP_MELT
+	if (SaberState==S_SABERON) {
+    if (lockuponclash or tipmeltonclash) {
+      HumRelaunch();
+      ActionModeSubStates = AS_HUM;
+      lockuponclash=false;
+      tipmeltonclash=false;
+      #if defined LS_BUTTON_DEBUG
+            Serial.println(F("End clash triggered lockup/tipmelt (either pre or active phase)"));
+      #endif  
+    }
+    else if (ActionModeSubStates == AS_HUM) {
+      tipmeltonclash=true;
+#if defined LS_BUTTON_DEBUG
+      Serial.println(F("Start clash triggered tipmelt"));
+#endif 
+    }
+  } 
+#endif // TIP_MELT  
+#endif  // SINGLEBUTTON
+} // mainMultiClick
 
 void mainLongPressStart() {
 #if defined LS_BUTTON_DEBUG
@@ -351,6 +400,7 @@ void mainLongPressStart() {
     SaberState=S_STANDBY;
     PrevSaberState=S_SABERON;
     lockuponclash = false;
+    tipmeltonclash = false;
 	} else if (SaberState==S_CONFIG) {
 #ifndef SINGLEBUTTON
 // Change Menu
@@ -476,10 +526,11 @@ void lockupDoubleClick() {
     #if defined LS_BUTTON_DEBUG
       Serial.println(F("Start motion triggered blaster bolt deflect"));
     #endif
-    if (lockuponclash) {
+    if (lockuponclash or tipmeltonclash) {
       HumRelaunch();
       ActionModeSubStates = AS_HUM;
       lockuponclash=false;
+      tipmeltonclash=false;
       #if defined LS_BUTTON_DEBUG
             Serial.println(F("End clash triggered lockup (either pre or active phase)"));
       #endif  

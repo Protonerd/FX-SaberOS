@@ -77,7 +77,7 @@ It is important to note that this will take up some memory in proportion the the
 /*
  * Uncomment to enable a very basic (hybrid) smooth swing type effect: modulate the hum in function of rotation speed when moving slower than a swing
  */
-#define SMOOTH_SWING
+//#define SMOOTH_SWING
 
 /* FX DURATIONS AND SUPRESS TIMES
  *  effects cannot be retriggered for the duration
@@ -107,7 +107,7 @@ It is important to note that this will take up some memory in proportion the the
   #define SMOOTH_SWING_FX_DURATION 250 //250 //minimal hum duration
 #endif
 // select if swing shall be triggered by change in blade orientation and rotation; otherwise swing is simply determined by blade acceleration
-#define SWING_QUATERNION
+//#define SWING_QUATERNION
 
 /*
  * BUTTONS PARAMETERS
@@ -160,13 +160,24 @@ It is important to note that this will take up some memory in proportion the the
   #define COLOR_PROFILE
 #endif
 
+#define ANIBLADE
+
 /*
  * Uncomment to enable a slight color change when performing a swing.
  * Some clash color is mixed into the main color while swinging.
  */
 //#define SWING_COLORCHANGE
 
-#define ANIBLADE
+/*
+ * Uncomment TIP_MELT to enable a "tip melt" (pixel blade only) effect. If PIXELBLADE, ANIBLADE and TIP_MELT are enabled, main button 
+ * double click (2 button mode) or triple click (single button mode) activates "Tip melt on clash". When active, the next clash (e.g. 
+ * stabbing a wall or floor) will add a heat animation to the saber tip. Initially it will flash in the clash color, but over the next 
+ * few seconds the tip color will gradually heat up and begin displaying a fire/melt effect.
+ */
+#ifdef PIXELBLADE
+  //#define TIP_MELT
+#endif
+
 /*
  * Enable Jukebox, an integrated MP3/WAV player which can play songs/music files
  * stored in the jukebox folder on your storage media (SD-card or SPI flash).
@@ -210,7 +221,7 @@ const long InternalReferenceVoltage = 1062;  // Adjust this value to your board'
  * DEBUG PARAMETERS
  */
 /* LS_INFO
- * For daily use I recommend you comment LS_INFO
+ * For daily use I recommend you comment LS_INFO (saves program storage space, which can be used to activate other features)
  * When you plug your device to USB uncomment LS_INFO !
  */
 //#define LS_LOOPLENGHT

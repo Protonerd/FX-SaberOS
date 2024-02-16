@@ -14,11 +14,12 @@
 // ====================================================================================
 
 // button action enum
-enum ButtonActionEnum{SINGLE_CLICK, DOUBLE_CLICK, LONGPRESS, LONGPRESS_START, LONGPRESS_STOP};
+enum ButtonActionEnum{SINGLE_CLICK, DOUBLE_CLICK, MULTI_CLICK, LONGPRESS, LONGPRESS_START, LONGPRESS_STOP};
 //ButtonActionEnum ButtonActionTye;
 
 void mainClick();
 void mainDoubleClick();
+void mainMultiClick();
 void mainLongPressStart();
 void mainLongPress();
 void mainLongPressStop();
